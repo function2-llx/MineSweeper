@@ -4,16 +4,14 @@ use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity board is
-    
     port(
         clk, rst: in std_logic;
         
         mode_in: in std_logic_vector(0 to 1);  -- 01：左击；10：右击；11：初始化
         r, c: in integer range 0 to 31;
         
-        lose: out std_logic;
+        lose, win: out std_logic;
         remain: buffer integer range 0 to 300; --  剩余雷数
-        oper: buffer integer range 0 to 300;   -- 剩余未操作格子数
 
         memory_oe: out std_logic;   -- read
         memory_we: out std_logic;   -- wirte
@@ -36,6 +34,8 @@ begin
         variable mode: std_logic_vector(0 to 1);
         variable pos: integer;
 
+        variable oper: integer; --  剩余未操作格子数
+
         variable lei: std_logic;    -- 是否有雷
         variable grid: std_logic_vector(0 to 1);    -- 插旗或翻开状态
         
@@ -46,7 +46,9 @@ begin
             
             if mode_in = "11" then
                 remain <= 0;
-                oper <= tot;
+                oper := tot;
+                win <= '0';
+                lose <= '0';
 
                 pos := 0;
                 cur_addr := (others => '0');
@@ -86,7 +88,7 @@ begin
                     grid(1) := data_tmp(2);
 
                     if mode = "01" then -- 翻开
-                        oper <= oper - 1;
+                        oper := oper - 1;
                         if grid = "00" then
                             grid := "01";
                             lose <= lei;
@@ -94,13 +96,17 @@ begin
                     else -- 插旗
                         if grid = "00" then --  插旗
                             remain <= remain - 1;
-                            oper <= oper - 1;
+                            oper := oper - 1;
                             grid(0) := '1';
                         elsif grid = "10" then  --  取消插旗
                             remain <= remain + 1;
-                            oper <= oper + 1;
+                            oper := oper + 1;
                             grid(0) := '0';
                         end if;
+                    end if;
+
+                    if oper = 0 and remain = 0 then
+                        win <= '1';
                     end if;
                     state := 4;
 
@@ -133,7 +139,7 @@ begin
                 case state is
                 when 0 =>
                     memory_addr <= cur_addr;
-                    data_tmp <= (0 => '1', others => '0');
+                    data_tmp <= (0 => cur_addr(0), others => '0');
 
                     state := 1;
 
