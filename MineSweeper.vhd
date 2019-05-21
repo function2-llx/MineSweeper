@@ -8,37 +8,41 @@ entity MineSweeper is
         clk, rst: in std_logic;
 
         memory_cs: out std_logic;   --  always low
-        memory_oe: inout std_logic;   -- read
-        memory_we: inout std_logic;   -- wirte
-        memory_addr: inout std_logic_vector(19 downto 0);
+        memory_oe: out std_logic;   -- read
+        memory_we: out std_logic;   -- wirte
+        memory_addr: out std_logic_vector(19 downto 0);
         memory_data: inout std_logic_vector(31 downto 0)
-        );
-        end entity;
+    );
+    end entity;
         
 architecture bhv of MineSweeper is
+    signal mode: std_logic_vector(0 to 1) := "11";
+    constant n: integer := 5;
+    signal r, c: integer range 0 to 31;
+    signal lose: std_logic;
+    signal remain, oper: integer range 0 to 300;
     
     component board is
         port(
             clk, rst: in std_logic;
             
-            mode: in std_logic_vector(0 to 1);  -- 10：左击；01：右击；else：不做
-            r, c: in std_logic_vector(4 downto 0);   -- n <= 16=2^4,r < 2n, c < 2n
-
-            memory_ctrl: inout std_logic;
-            memory_oe: inout std_logic;   -- read
-            memory_we: inout std_logic;   -- wirte
-            memory_addr: inout std_logic_vector(19 downto 0);
+            mode_in: in std_logic_vector(0 to 1);  -- 01：左击；10：右击；11：初始化
+            r, c: in integer range 0 to 31;
+            
+            lose: out std_logic;
+            remain: inout integer range 0 to 300; --  剩余雷数
+            oper: inout integer range 0 to 300;   -- 剩余未操作格子数
+    
+            memory_oe: out std_logic;   -- read
+            memory_we: out std_logic;   -- wirte
+            memory_addr: out std_logic_vector(19 downto 0);
             memory_data: inout std_logic_vector(31 downto 0)
         );
     end component;
-    
-    signal memory_ctrl: std_logic;        
-    signal mode: std_logic_vector(0 to 1) := "11";
-    signal r, c: std_logic_vector(4 downto 0);
 begin
     memory_cs <= '0';
-    memory_oe <= '1';
-    memory_we <= '1';
+    -- memory_oe <= '1';
+    -- memory_we <= '1';
     
-    board_ins: board port map(clk, rst, mode, r, c, memory_ctrl, memory_oe, memory_we, memory_addr, memory_data);
+    board_ins: board port map(clk, rst, mode, r, c, lose, remain, oper, memory_oe, memory_we, memory_addr, memory_data);
 end architecture;
