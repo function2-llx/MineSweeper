@@ -41,7 +41,7 @@ begin
         
         variable cur_addr: std_logic_vector(19 downto 0) := (others => '0');
     begin
-        if rst = '1' then
+        if rst = '0' then
             state := 0;
             
             if mode_in = "11" then
