@@ -21,15 +21,11 @@ end cam_get;
 
 architecture get_bhv of cam_get is
 signal clk2,clk4:std_logic:='0';
-signal stat:integer range 0 to 90:=0;
 signal pstat:integer range 0 to 3:=0;
 signal init_clk:integer:=0;
-signal sccb_stat:integer:=0;
-signal hnum,vnum,vhnum,vvnum,tix,tiy,tox,toy:integer range 0 to 1600:=0;
+signal hnum,vnum,tix,tiy,tox,toy:integer range 0 to 1600:=0;
 signal tr,tg,tb,ty,tu,tv:std_logic_vector(31 downto 0):=(others=>'0');
-signal tscl:integer range 0 to 400:=0;
-signal read_ok:std_logic:='0';
-signal reg_r,tok:std_logic;
+signal tok:std_logic;
 begin
 	process(clk)
 	begin
