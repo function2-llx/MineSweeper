@@ -14,7 +14,7 @@ port
 	rst:out std_logic:='1';
 	pwdn:out std_logic:='0';
 	clk:in std_logic;
-	posx,posy:out integer;
+	posx,posy:out integer:=0;
 	is_long:out std_logic
 );
 end cam_get;
@@ -58,7 +58,6 @@ begin
 		if(pclk'event and pclk='1')then
 			if(hs='0')then
 				hnum<=0;
-				tiy<=0;
 				pstat<=0;
 			else
 				hnum<=hnum+1;
@@ -67,8 +66,12 @@ begin
 				else
 					pstat<=pstat+1;
 				end if;
-				if(pstat=2 or pstat=3)then
-					tiy<=tiy+1;
+				if(pstat=1 or pstat=2)then
+					if(tiy=639)then
+						tiy<=0;
+					else
+						tiy<=tiy+1;
+					end if;
 				end if;
 			end if;
 			if(vs='1')then
@@ -92,12 +95,16 @@ begin
 			end case;	
 		end if;
 	end process;
-	conv:entity work.yuv2rgb port map(ty,tu,tv,vnum,tiy,clk,tr,tg,tb,tox,toy,tok);
-	process(clk)
+	conv:entity work.yuv2rgb port map(y=>ty,u=>tu,v=>tv,px=>vnum,py=>tiy,clk=>pclk,r=>tr,g=>tg,b=>tb,ox=>tox,oy=>toy,ook=>tok);
+	process(pclk)
 	begin
-		if(clk'event and clk='1')then
+		if(pclk'event and pclk='1')then
 			if(tok='1')then
-				null;
+				if(tr>150 and tg<50 and tb<50)then
+					posx<=tox;
+					posy<=toy;
+					is_long<='0';
+				end if;
 			end if;
 		end if;
 	end process;
