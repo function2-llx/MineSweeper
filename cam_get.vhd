@@ -25,12 +25,11 @@ signal stat:integer range 0 to 90:=0;
 signal pstat:integer range 0 to 3:=0;
 signal init_clk:integer:=0;
 signal sccb_stat:integer:=0;
-signal hnum,vnum,nhnum,vhnum,vvnum:integer range 0 to 1600:=0;
-signal tr1,tg1,tb1,tr2,tg2,tb2,ty1,ty2,tu,tv:std_logic_vector(31 downto 0):=(others=>'0');
+signal hnum,vnum,vhnum,vvnum,tix,tiy,tox,toy:integer range 0 to 1600:=0;
+signal tr,tg,tb,ty,tu,tv:std_logic_vector(31 downto 0):=(others=>'0');
 signal tscl:integer range 0 to 400:=0;
 signal read_ok:std_logic:='0';
-signal reg_r:std_logic;
-signal t_ram_addr:std_logic_vector(20 downto 0) := (others => '0');
+signal reg_r,tok:std_logic;
 begin
 	process(clk)
 	begin
@@ -42,20 +41,6 @@ begin
 					rst<='1';
 				end if;
 				init_clk<=init_clk+1;
-			end if;
-		end if;
-	end process;
-	process(clk)
-	begin
-		if(clk'event and clk='1')then
-			if(tscl=199)then
-				scl<='0';
-				tscl<=tscl+1;
-			elsif(tscl=399)then
-				scl<='1';
-				tscl<=0;
-			else
-				tscl<=tscl+1;
 			end if;
 		end if;
 	end process;
@@ -77,15 +62,17 @@ begin
 		if(pclk'event and pclk='1')then
 			if(hs='0')then
 				hnum<=0;
-				nhnum<=nhnum+1;
+				tiy<=0;
 				pstat<=0;
 			else
-				nhnum<=0;
 				hnum<=hnum+1;
 				if(pstat=3)then
 					pstat<=0;
 				else
 					pstat<=pstat+1;
+				end if;
+				if(pstat=2 or pstat=3)then
+					tiy<=tiy+1;
 				end if;
 			end if;
 			if(vs='1')then
@@ -101,15 +88,22 @@ begin
 			when 0=>
 				tu(7 downto 0)<=d;
 			when 1=>
-				ty1(7 downto 0)<=d;
+				ty(7 downto 0)<=d;
 			when 2=>
 				tv(7 downto 0)<=d;
 			when 3=>
-				ty2(7 downto 0)<=d;
-			end case;
-				
+				ty(7 downto 0)<=d;
+			end case;	
 		end if;
 	end process;
-
-	
+	conv:entity work.yuv2rgb port map(ty,tu,tv,vnum,tiy,clk,tr,tg,tb,tox,toy,tok);
+	process(clk)
+	begin
+		if(clk'event and clk='1')then
+			if(tok='1')then
+				null;
+			end if;
+		end if;
+	end process;
+			
 end get_bhv;
