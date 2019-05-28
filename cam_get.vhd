@@ -15,7 +15,14 @@ port
 	pwdn:out std_logic:='0';
 	clk:in std_logic;
 	posx,posy:out integer:=0;
-	is_long:out std_logic
+	is_long:out std_logic;
+	ovs,ohs:out std_logic;
+	ored,ogreen,oblue:out std_logic_vector(2 downto 0);
+	memadd:out std_logic_vector(19 downto 0);
+	memdata:inout std_logic_vector(31 downto 0);
+	memoe,memre:out std_logic:='1';
+	memcs:out std_logic:='0';
+	irst:in std_logic
 );
 end cam_get;
 
@@ -23,9 +30,9 @@ architecture get_bhv of cam_get is
 signal clk2,clk4:std_logic:='0';
 signal pstat:integer range 0 to 3:=0;
 signal init_clk:integer:=0;
-signal hnum,vnum,tix,tiy,tox,toy:integer range 0 to 1600:=0;
+signal hnum,vnum,tix,tiy,tox,toy,p1x,p1y:integer range 0 to 1600:=0;
 signal tr,tg,tb,ty,tu,tv:std_logic_vector(31 downto 0):=(others=>'0');
-signal tok:std_logic;
+signal tok,p1ok:std_logic;
 begin
 	process(clk)
 	begin
@@ -108,5 +115,6 @@ begin
 			end if;
 		end if;
 	end process;
-			
+	mem:entity work.rgbtest port map(addr=>memadd,data=>memdata,oe=>memoe,re=>memre,clk=>clk,pclk=>pclk,rst=>irst,ix=>tox,iy=>toy,ir=>tr,ig=>tg,ib=>tb,ored=>ored,ogreen=>ogreen,oblue=>oblue,vs=>ovs,hs=>ohs);
+	pos1:entity work.getpos port map(clk=>pclk,x=>vnum,y=>tiy,r=>tr,g=>tg,b=>tb,ox=>p1x,oy=>p1y,ook=>p1ok);
 end get_bhv;
