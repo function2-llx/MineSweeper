@@ -32,7 +32,7 @@ signal pstat:integer range 0 to 3:=0;
 signal init_clk:integer:=0;
 signal hnum,vnum,tix,tiy,tox,toy,p1x,p1y:integer range 0 to 1600:=0;
 signal tr,tg,tb,ty,tu,tv:std_logic_vector(31 downto 0):=(others=>'0');
-signal tok,p1ok:std_logic;
+signal tok,p1ok,convok:std_logic:='0';
 begin
 	process(clk)
 	begin
@@ -65,6 +65,7 @@ begin
 		if(pclk'event and pclk='1')then
 			if(hs='0')then
 				hnum<=0;
+				tiy<=0;
 				pstat<=0;
 			else
 				hnum<=hnum+1;
@@ -73,48 +74,33 @@ begin
 				else
 					pstat<=pstat+1;
 				end if;
-				if(pstat=1 or pstat=2)then
-					if(tiy=639)then
-						tiy<=0;
-					else
-						tiy<=tiy+1;
-					end if;
+				if(pstat=2 or pstat=3)then
+					tiy<=tiy+1;
 				end if;
 			end if;
 			if(vs='1')then
-				vnum<=493;
+				vnum<=0;
 			elsif(hnum=1279)then
-				if(vnum=509)then
-					vnum<=0;
-				else
-					vnum<=vnum+1;
-				end if;
+				vnum<=vnum+1;
 			end if;
 			case pstat is
 			when 0=>
 				tu(7 downto 0)<=d;
+				convok<='0';
 			when 1=>
 				ty(7 downto 0)<=d;
+				convok<='1';
 			when 2=>
 				tv(7 downto 0)<=d;
+				convok<='1';
 			when 3=>
 				ty(7 downto 0)<=d;
+				convok<='0';
 			end case;	
 		end if;
 	end process;
-	conv:entity work.yuv2rgb port map(y=>ty,u=>tu,v=>tv,px=>vnum,py=>tiy,clk=>pclk,r=>tr,g=>tg,b=>tb,ox=>tox,oy=>toy,ook=>tok);
-	process(pclk)
-	begin
-		if(pclk'event and pclk='1')then
-			if(tok='1')then
-				if(tr>150 and tg<50 and tb<50)then
-					posx<=tox;
-					posy<=toy;
-					is_long<='0';
-				end if;
-			end if;
-		end if;
-	end process;
+	conv:entity work.yuv2rgb port map(y=>ty,u=>tu,v=>tv,px=>vnum,py=>tiy,clk=>pclk,iok=>convok,r=>tr,g=>tg,b=>tb,ox=>tox,oy=>toy,ook=>tok);
 	mem:entity work.rgbtest port map(addr=>memadd,data=>memdata,oe=>memoe,re=>memre,clk=>clk,pclk=>pclk,rst=>irst,ix=>tox,iy=>toy,ir=>tr,ig=>tg,ib=>tb,ored=>ored,ogreen=>ogreen,oblue=>oblue,vs=>ovs,hs=>ohs);
 	pos1:entity work.getpos port map(clk=>pclk,x=>vnum,y=>tiy,r=>tr,g=>tg,b=>tb,ox=>p1x,oy=>p1y,ook=>p1ok);
+	posx<=p1x;posy<=p1y;
 end get_bhv;

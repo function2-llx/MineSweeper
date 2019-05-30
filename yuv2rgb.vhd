@@ -7,7 +7,7 @@ port
 (
 	y,u,v:in std_logic_vector(31 downto 0);
 	px,py:in integer range 0 to 1600;
-	clk:in std_logic;
+	clk,iok:in std_logic;
 	r,g,b:out std_logic_vector(31 downto 0):=(others=>'0');
 	ox,oy:out integer range 0 to 1600;
 	ook:out std_logic:='0'
@@ -25,12 +25,7 @@ begin
 	process(clk)
 	begin
 		if(clk'event and clk='1')then
-			px1<=px;py1<=py;
-			if(px1=px and py1=py)then
-				ok1<='0';
-			else
-				ok1<='1';
-			end if;
+			px1<=px;py1<=py;ok1<=iok;
 			px2<=px1;py2<=py1;ok2<=ok1;
 			px3<=px2;py3<=py2;ok3<=ok2;
 			px4<=px3;py4<=py3;ok4<=ok3;
