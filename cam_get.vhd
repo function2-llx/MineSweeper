@@ -1,6 +1,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 use ieee.std_logic_unsigned.all;
+
 
 entity cam_get is
 port
@@ -14,8 +16,8 @@ port
 	rst:out std_logic:='1';
 	pwdn:out std_logic:='0';
 	clk:in std_logic;
-	posx,posy:out integer:=0;
-	is_long:out std_logic;
+	posx,posy:out integer range 0 to 1600;
+	is_long,orst:out std_logic:='0';
 	ovs,ohs:out std_logic;
 	ored,ogreen,oblue:out std_logic_vector(2 downto 0);
 	memadd:out std_logic_vector(19 downto 0);
@@ -30,7 +32,8 @@ architecture get_bhv of cam_get is
 signal clk2,clk4:std_logic:='0';
 signal pstat:integer range 0 to 3:=0;
 signal init_clk:integer:=0;
-signal hnum,vnum,tix,tiy,tox,toy,p1x,p1y:integer range 0 to 1600:=0;
+signal p1x,p1y:std_logic_vector(31 downto 0);
+signal hnum,vnum,tix,tiy,tox,toy:integer range 0 to 1600:=0;
 signal tr,tg,tb,ty,tu,tv:std_logic_vector(31 downto 0):=(others=>'0');
 signal tok,p1ok,convok:std_logic:='0';
 begin
@@ -102,5 +105,5 @@ begin
 	conv:entity work.yuv2rgb port map(y=>ty,u=>tu,v=>tv,px=>vnum,py=>tiy,clk=>pclk,iok=>convok,r=>tr,g=>tg,b=>tb,ox=>tox,oy=>toy,ook=>tok);
 	mem:entity work.rgbtest port map(addr=>memadd,data=>memdata,oe=>memoe,re=>memre,clk=>clk,pclk=>pclk,rst=>irst,ix=>tox,iy=>toy,ir=>tr,ig=>tg,ib=>tb,ored=>ored,ogreen=>ogreen,oblue=>oblue,vs=>ovs,hs=>ohs);
 	pos1:entity work.getpos port map(clk=>pclk,x=>vnum,y=>tiy,r=>tr,g=>tg,b=>tb,ox=>p1x,oy=>p1y,ook=>p1ok);
-	posx<=p1x;posy<=p1y;
+	posf:entity work.getfinpos port map(clk=>p1ok,x=>to_integer(signed(p1x)),y=>to_integer(signed(p1y)),ox=>posx,oy=>posy,is_long=>is_long,orst=>orst);
 end get_bhv;
