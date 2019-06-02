@@ -21,7 +21,7 @@ begin
             when "0011" => display <= "1111001";
             when "0100" => display <= "1100011";
             when "0101" => display <= "0111011";
-            when "0110" => display <= "0110111";
+            when "0110" => display <= "0111111";
             when "0111" => display <= "1101000";
             when "1000" => display <= "1111111";
             when "1001" => display <= "1101011";
