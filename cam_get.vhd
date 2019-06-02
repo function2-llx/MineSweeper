@@ -22,8 +22,7 @@ port
 	ored,ogreen,oblue:out std_logic_vector(2 downto 0);
 	memadd:out std_logic_vector(19 downto 0);
 	memdata:inout std_logic_vector(31 downto 0);
-	memoe,memre:out std_logic:='1';
-	memcs:out std_logic:='0';
+	memoe,memre,memcs:out std_logic:='1';
 	irst:in std_logic
 );
 end cam_get;
@@ -103,7 +102,8 @@ begin
 		end if;
 	end process;
 	conv:entity work.yuv2rgb port map(y=>ty,u=>tu,v=>tv,px=>vnum,py=>tiy,clk=>pclk,iok=>convok,r=>tr,g=>tg,b=>tb,ox=>tox,oy=>toy,ook=>tok);
-	mem:entity work.rgbtest port map(addr=>memadd,data=>memdata,oe=>memoe,re=>memre,clk=>clk,pclk=>pclk,rst=>irst,ix=>tox,iy=>toy,ir=>tr,ig=>tg,ib=>tb,ored=>ored,ogreen=>ogreen,oblue=>oblue,vs=>ovs,hs=>ohs);
+	--mem:entity work.rgbtest port map(addr=>memadd,data=>memdata,oe=>memoe,re=>memre,cs=>memcs,clk=>clk,pclk=>pclk,rst=>irst,ix=>tox,iy=>toy,ir=>tr,ig=>tg,ib=>tb,ored=>ored,ogreen=>ogreen,oblue=>oblue,vs=>ovs,hs=>ohs);
+	mem:entity work.rgbtestb port map(clk=>clk,pclk=>pclk,rst=>irst,ix=>tox,iy=>toy,ir=>tr,ig=>tg,ib=>tb,ored=>ored,ogreen=>ogreen,oblue=>oblue,vs=>ovs,hs=>ohs);
 	pos1:entity work.getpos port map(clk=>pclk,x=>vnum,y=>tiy,r=>tr,g=>tg,b=>tb,ox=>p1x,oy=>p1y,ook=>p1ok);
 	posf:entity work.getfinpos port map(clk=>p1ok,x=>to_integer(signed(p1x)),y=>to_integer(signed(p1y)),ox=>posx,oy=>posy,is_long=>is_long,orst=>orst);
 end get_bhv;

@@ -17,6 +17,7 @@ end getfinpos;
 architecture getfinpos_bhv of getfinpos is
 signal px1,px2,py1,py2:integer:=2147483647;
 signal n:integer:=0;
+constant thr:integer:=20;
 begin
 	process(clk)
 	begin
@@ -26,12 +27,12 @@ begin
 					orst<='1';
 					is_long<='1';
 					n<=0;
-					ox<=px1+10;
-					oy<=py1+10;
-					px1<=x-10;
-					px2<=x+10;
-					py1<=y-10;
-					py2<=y+10;
+					ox<=px1+thr;
+					oy<=py1+thr;
+					px1<=x-thr;
+					px2<=x+thr;
+					py1<=y-thr;
+					py2<=y+thr;
 				else
 					n<=n+1;
 					orst<='0';
@@ -40,14 +41,23 @@ begin
 				if(n>=15)then
 					orst<='1';
 					is_long<='0';
-					ox<=px1+10;
-					oy<=py1+10;
+					ox<=px1+thr;
+					oy<=py1+thr;
+				else
+					orst<='0';
 				end if;
 				n<=0;
-				px1<=x-10;
-				px2<=x+10;
-				py1<=y-10;
-				py2<=y+10;
+				if(x>=0 and y=0)then
+					px1<=x-thr;
+					px2<=x+thr;
+					py1<=y-thr;
+					py2<=y+thr;
+				else
+					px1<=2147483647;
+					py1<=2147483647;
+					px2<=2147483647;
+					py2<=2147483647;
+				end if;
 			end if;
 		end if;
 	end process;
