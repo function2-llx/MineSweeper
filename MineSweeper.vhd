@@ -7,17 +7,7 @@ entity MineSweeper is
     port (
         clk100M, rst: in std_logic;
 
-        -- for test
-        -- mode: in std_logic_vector(0 to 1);
-        -- r, c: in integer range 0 to 31; 
-
-        led_raw: out std_logic_vector(0 to 55);
-
-        memory_ce: out std_logic;
-        memory_oe: buffer std_logic;   -- read
-        memory_we: buffer std_logic;   -- wirte
-        memory_addr: out std_logic_vector(19 downto 0);
-        memory_data: inout std_logic_vector(31 downto 0)
+        led_raw: out std_logic_vector(0 to 55)
     );
 end entity;
         
@@ -32,24 +22,25 @@ architecture bhv of MineSweeper is
 
     type led_type is array(0 to 7) of std_logic_vector(0 to 6);
     signal leds: led_type;
-    
+
+    signal grids: std_logic_vector(0 to 3 * 300);
+    signal info: std_logic_vector(0 to 2);
+    signal zwls: integer range 0 to 6;
+
     component board is
         port(
             clk, rst: in std_logic;
             
             mode_in: in std_logic_vector(0 to 1);  -- 01：左击；10：右击；11：初始化
             r, c: in integer range 0 to 31;
+    
+            grids: buffer std_logic_vector(0 to 300 * 3);
+    
+            info: out std_logic_vector(0 to 2);
+            zwls: buffer integer range 0 to 6; -- 周围雷数
             
             lose, win: out std_logic;
-            remain: inout integer range 0 to 300; --  剩余雷数
-
-            test_data: buffer std_logic_vector(31 downto 0);
-    
-            memory_ce: out std_logic;
-            memory_oe: out std_logic;   -- read
-            memory_we: out std_logic;   -- wirte
-            memory_addr: out std_logic_vector(19 downto 0);
-            memory_data: inout std_logic_vector(31 downto 0)
+            remain: buffer integer range 0 to 300 --  剩余雷数
         );
     end component;
 
@@ -60,18 +51,26 @@ architecture bhv of MineSweeper is
         );
     end component;
 
-    -- signal test: std_logic_vector(0 to 3) := "0000";
     signal clk50M, clk25M: std_logic;
-    -- signal cnt: std_logic_vector(0 to 21);
-    signal test_data: std_logic_vector(31 downto 0);
-    -- signal read_data: std_logic_vector(31 downto 0);
-    -- constant write_data: std_logic_vector(31 downto 0) := "11010000000000000000000000000011";
-    signal test_addr: std_logic_vector(19 downto 0) := "00000000000000000100";
-    -- signal sram_led: std_logic_vector(31 downto 0);
-    -- signal test_out: std_logic_vector(0 to 3);
+
+    component in_sram IS
+	PORT (
+		clock		: IN STD_LOGIC  := '1';
+		data		: IN STD_LOGIC_VECTOR (3 DOWNTO 0);
+		rdaddress		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+		wraddress		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+		wren		: IN STD_LOGIC  := '0';
+		q		: OUT STD_LOGIC_VECTOR (3 DOWNTO 0)
+	);
+    END component;
+
+    signal data_sig: std_logic_vector(3 downto 0);
+    signal rdaddress_sig, wraddress_sig: std_logic_vector(7 downto 0);
+    signal wren_sig: std_logic;
+    signal test_addr: std_logic_vector(7 downto 0) := "00000100";
+    signal q_sig: std_logic_vector(3 downto 0);
 
 begin
-    -- memory_ce <= '0';
     led_raw(0 to 6) <= leds(0);
     led_raw(7 to 13) <= leds(1);
     led_raw(14 to 20) <= leds(2);
@@ -82,8 +81,62 @@ begin
     led_raw(49 to 55) <= leds(7);
 
     decoder0: decoder port map("1110", leds(0));
-    decoder1: decoder port map(test_data(3 downto 0), leds(1));
-    decoder2: decoder port map(test_addr(3 downto 0), leds(2));
+    decoder1: decoder port map(q_sig, leds(1));
+
+    in_sram_inst : in_sram PORT MAP (
+		clock	 => clk100M,
+		data	 => data_sig,
+		rdaddress	 => rdaddress_sig,
+		wraddress	 => wraddress_sig,
+		wren	 => wren_sig,
+		q	 => q_sig
+    );
+    
+    process(rst, clk100M)
+        variable state: integer range 0 to 4;
+        -- variable data: std_logic_vector(3 downto 0);
+        -- variable addr: std_logic_vector(7 downto 0);
+        variable pos: integer;
+    begin
+        if rst = '0' then
+            state := 0;
+            pos := 0;
+            wraddress_sig <= (others => '0');
+            rdaddress_sig <= (others => '0');
+            wren_sig <= '0';
+            data_sig <= (others => '0');
+
+        elsif clk100M'event and clk100M = '1' then
+            case state is
+
+            when 0 => 
+                wren_sig <= '1';
+                state := 1;
+            
+            when 1 =>
+                wren_sig <= '0';
+                state := 2;
+            
+            when 2 =>
+                wraddress_sig <= wraddress_sig + '1';
+                data_sig <= data_sig + '1';
+                pos := pos + 1;
+
+                if pos = 10 then
+                    state := 3;
+                else
+                    state := 0;
+                end if;
+
+            when 3 =>
+                rdaddress_sig <= test_addr;
+                state := 4;
+            when 4 => null;
+            end case;
+        end if;
+    end process;
+
+    -- -- board_ins: board port map(clk25M, rst, mode, r, c, grids, info, zwls, lose, win, remain);
 
     process(clk100M)
         variable cnt: std_logic_vector(0 to 20);
@@ -100,109 +153,4 @@ begin
         end if;
     end process;
 
-    -- memory_ce <= clk;
-
-    -- process(memory_ce)
-	-- begin
-	-- 	if ce = '1' then
-	-- 		data <= (others => 'Z');
-	-- 	else
-	-- 		if state = '0' then
-	-- 			r_data <= data;
-	-- 		else
-	-- 			data <= w_temp;
-	-- 		end if;
-	-- 	end if;
-	-- end process;
-
-    process(clk25M, rst)
-        variable state: integer range 0 to 8;
-        variable write_cnt: integer := 0;
-        variable addr: std_logic_vector(19 downto 0);
-        variable data: std_logic_vector(31 downto 0);
-
-    begin
-        if rst = '0' then
-            state := 0;
-            write_cnt := 0;
-            test_data <= (others => '0');
-            
-            addr := (others => '0');
-            data := (others => '0');
-            memory_addr <= addr;
-            memory_ce <= '1';
-            memory_oe <= '1';
-            memory_we <= '1';
-
-        elsif clk25M'event and clk25M = '1' then
-            case state is
-
-            when 0 =>
-                memory_addr <= addr;
-
-                state := 1;
-                
-            when 1 =>
-                memory_ce <= '0';
-                memory_we <= '0';
-
-                state := 2;
-                
-            when 2 =>
-                memory_data <= data;
-
-                state := 3;
-                
-            when 3 =>
-                memory_we <= '1';
-                memory_ce <= '1';
-                
-                state := 4;
-                
-            when 4 => 
-                memory_data <= (others => 'Z');
-                if write_cnt = 9 then
-                    state := 5;
-                else
-                    write_cnt := write_cnt + 1;
-                    data := data + '1';
-                    addr := addr + 1;
-                    state := 0;
-                end if;
-                
-            when 5 =>
-                memory_addr <= test_addr;
-                memory_ce <= '0';
-                
-                state := 6;
-                
-            when 6 =>
-                memory_oe <= '0';
-                
-                state := 7;
-                
-            when 7 =>
-                test_data <= memory_data;
-
-                state := 8;
-            
-            when 8 =>
-                memory_ce <= '1';
-                memory_oe <= '1';
-
-                write_cnt := 0;
-                test_data <= (others => '0');
-                
-                addr := (others => '0');
-                data := (others => '0');
-
-                state := 0;
-            
-            end case;
-        end if;
-
-    end process;
-    -- decoder2: decoder port map(test_data(3 downto 0), leds(2));
-    -- board_ins: board port map(clk, rst, mode, r, c, lose, win, remain, test_data, memory_ce, memory_oe, memory_we, memory_addr, memory_data);
-    
 end architecture;
