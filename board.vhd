@@ -9,185 +9,208 @@ entity board is
         
         mode_in: in std_logic_vector(0 to 1);  -- 01：左击；10：右击；11：初始化
         r, c: in integer range 0 to 31;
+        lose, win: buffer std_logic;
+        remain: buffer integer range 0 to 300; --  剩余雷数
 
-        lose, win: out std_logic;
-        remain: buffer integer range 0 to 300 --  剩余雷数
+        vga_wren: out std_logic := '0';
+        vga_wraddr: out std_logic_vector(7 downto 0);
+        vga_in: out std_logic_vector(3 downto 0)
     );
 end entity;
 
 architecture bhv of board is
-    constant n: integer := 5;
+    constant n: integer := 4;
     constant tot: integer := 3 * n * n - 3 * n + 1;
-    constant half_tot: integer := n * (3 * n - 1) / 2；
 
-    function get_len(r: integer) return integer is
-    begin
-        if r <= n then
-            return r + n;
-        else
-            return 2 * n  - 1 - (r - n);
-    end if;
-    end function;
 
-    -- 前 r 行之和
-    function pre_sum(r: integer) return integer is
+    component grid_ram IS
+	PORT (
+		address		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+		clock		: IN STD_LOGIC  := '1';
+		q		: OUT STD_LOGIC_VECTOR (3 DOWNTO 0)
+    );
+    END component;
+
+    signal grid_addr: std_logic_vector(7 downto 0);
+    signal grid_data: std_logic_vector(3 downto 0);
+
+
+    component board_ram IS
+	PORT (
+		clock		: IN STD_LOGIC  := '1';
+		data		: IN STD_LOGIC_VECTOR (1 DOWNTO 0);
+		rdaddress		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+		wraddress		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+		wren		: IN STD_LOGIC  := '0';
+		q		: OUT STD_LOGIC_VECTOR (1 DOWNTO 0)
+	);
+    END component;
+
+    signal board_in, board_out: std_logic_vector(1 downto 0);
+    signal board_rdaddr, board_wraddr: std_logic_vector(7 downto 0);
+    signal board_wren: std_logic := '0';
+
+    function get_addr(c: integer; r: integer) return std_logic_vector is
     begin
-        if r <= 0 then 
-            return 0;
+        if c <= n - 1 then
+            return conv_std_logic_vector(c * (c + 1) / 2 + r, 8);
         end if;
-
-        if r <= n then
-            return r * n + (((0 + r - 1) * r) / 2);
-        else
-            return half_tot + (r - n) * n + ((2 * n - 2 + 3 * n - 1 - r) * (r - n) / 2);
-        end if;
-    end function;
-
-    function get_id(r: integer; c: integer) return integer is
-    begin
-        if r > 0 then
-            return pre_sum(r - 1) + c;
-        else
-            return c;
-        end if;
-    end function;
-
-    impure function get_lei(r: integer; c: integer) return integer is
-        variable pos: integer;
-    begin
-        pos := get_id(r, c);
-        if pos >= 0 then
-            if grids(pos * 3) = '1' then
-                return 1;
+    
+        if c <= 3 * n - 3 then
+            if (c - n) mod 2 = 0 then
+                return conv_std_logic_vector(n * (n + 1) / 2 + (2 * n - 1) * ((c - n) / 2) + r, 8);
+            else
+                return conv_std_logic_vector(n * (n + 1) / 2 + (2 * n - 1) * ((c - n) / 2) + n - 1 + r, 8);
             end if;
         end if;
+            
+        return conv_std_logic_vector((n + 1) * n / 2 + (n - 1) * (2 * n - 1) + (c - 3 * n + 2) * (5 * n - c - 3) / 2 + r, 8);
+    end function;
 
-        return 0;
-    end;
 begin
+    grid_ram_inst : grid_ram PORT MAP (
+		address	 => grid_addr,
+		clock	 => clk,
+		q	 => grid_data
+    );
     
-    process(clk, rst)
-        variable state: integer range 0 to 7;
+    board_ram_inst : board_ram PORT MAP (
+		clock	 => clk,
+		data	 => board_in,
+		rdaddress	 => board_rdaddr,
+		wraddress	 => board_wraddr,
+		wren	 => board_wren,
+		q	 => board_out
+    );
+    
+    process(rst, clk)
+        variable addr: std_logic_vector(7 downto 0);
         variable mode: std_logic_vector(0 to 1);
-        variable pos, tmp_pos: integer;
+        variable state: integer range 0 to 3;
+        variable info: std_logic_vector(1 downto 0);
+        variable oper: integer range 0 to tot;
 
-        variable oper: integer; --  剩余未操作格子数
-
-        variable lei: std_logic;    -- 是否有雷
-        variable grid: std_logic_vector(0 to 1);    -- 插旗或翻开状态
-
-        constant a: integer := 23;
-        constant b: integer := 123;
-        variable pre: std_logic_vector(0 to 1);
+        constant dead_state: std_logic_vector(3 downto 0) := "0111";
+        constant flag_state: std_logic_vector(3 downto 0) := "1000";
+        constant unknown_state: std_logic_vector(3 downto 0) := "1001";
 
     begin
         if rst = '0' then
-            if mode_in = "11" then
-                remain <= 0;
-                oper := tot;
-                win <= '0';
-                lose <= '0';
-                pos := 0;
-            elsif mode_in = "01" or mode_in = "10" then
-                state := 0;
-                pos := get_id(r, c);
-            end if;
             mode := mode_in;
+            state := 0;
+            oper := tot;
+
+            if mode = "00" then
+                addr := (others => '0');
+            elsif mode = "01" or mode = "10" then
+                addr := get_addr(c, r);
+            end if;
 
         elsif clk'event and clk = '1' then
-            if (mode = "01" or mode = "10") then  -- 游戏中
+            if mode = "00" then --  初始化
                 case state is
-                when 0 => 
-                    lei := grids(pos * 3);
-                    grid := grids(pos * 3 + 1 to pos * 3 + 2);
+                when 0 =>
+                    board_wraddr <= addr;
+                    board_in <= "00";
+                    board_wren <= '1';
 
-                    if mode = "01" then -- 左击
-                        oper := oper - 1;
-                        if grid = "00" then
-                            grid := "01";
-                            lose <= lei;
-                        end if;
-                    elsif grid = "00" then --  插旗-- 右击
-                        if oper = 1 and remain = 1 then
-                            win <= '1';
-                        end if;
-                        remain <= remain - 1;
-                        oper := oper - 1;
-                        grid(0) := '1';
-                    elsif grid = "10" then  --  取消插旗
+                    vga_wraddr <= addr;
+                    vga_in <= unknown_state;
+                    vga_wren <= '1';
+
+                    grid_addr <= addr;
+
+                    state := 1;
+                when 1 =>
+                    if grid_data(3) = '1' then
                         remain <= remain + 1;
-                        oper := oper + 1;
-                        grid(0) := '0';
                     end if;
 
-                    grids(pos * 3 + 1 to pos * 3 + 2) <= grid;
-                    info(0) <= lei;
-                    info(1 to 2) <= grid;
+                    board_wren <= '0';
+                    vga_wren <= '0';
+                    addr := addr + '1';
+
+                    if addr = conv_std_logic_vector(tot, 8) then
+                        state := 2;
+                    else
+                        state := 0;
+                    end if;
+                
+                when 2 | 3 => null;
+                    
+                end case;
+            elsif mode = "01" or mode = "10" then   --  游戏中
+                case state is
+                when 0 =>
+                    grid_addr <= addr;
+                    board_rdaddr <= addr;
+                    board_wraddr <= addr;
+                    vga_wraddr <= addr;
 
                     state := 1;
 
                 when 1 =>
-                    if r >= n then
-                        -- if grids(get_id(r - 1, c) * 3) = '1' then
-                        zwls <= zwls + get_lei(r - 1, c);
-                        -- end if;
-                    elsif r > 0 and c > 0 then
-                        -- if grids(get_id(r - 1, c - 1) * 3) = '1' then
-                        zwls <= zwls + get_lei(r - 1, c - 1);
-                        -- end if;
+                    info := board_out;
+                    oper := oper - 1;
+
+                    if mode = "01" then --  左击
+                        if info = "00" then
+                            -- info(0) := '1';
+                            if grid_data(3) = '1' then
+                                lose <= '1';
+                                vga_in <= dead_state;   -- 翻开了雷
+                            else
+                                vga_in(3) <= '0';
+                                vga_in(2 downto 0) <= grid_data(2 downto 0);
+                            end if;
+                            vga_wren <= '1';
+
+                            board_in <= "01";
+                            board_wren <= '1';
+
+                            state := 2;
+                        else 
+                            state := 3;
+                        end if;
+                    else    --  右击
+                        if info = "10" then
+                            info(1) := '0';
+                            remain <= remain + 1;
+
+                            vga_in <= unknown_state;
+                            vga_wren <= '1';
+
+                            board_in <= "00";
+                            board_wren <= '1';
+                        elsif info = "00" then
+                            info(1) := '1';
+                            remain <= remain - 1;
+
+                            vga_in <= flag_state;
+                            vga_wren <= '1';
+
+                            board_in <= info;
+                            board_wren <= '1';
+                        else
+                            state := 3;
+                        end if;
                     end if;
 
                     state := 2;
-
                 when 2 =>
-                    if r >= n then
-                        zwls <= zwls + get_lei(r - 1, c + 1);
-                    elsif r > 0 and c < get_len(r) then
-                        zwls <= zwls + get_lei(r - 1, c);
+                    vga_wren <= '0';
+                    board_wren <= '0';
+                    if lose = '0' and remain = 0 and oper = 0 then
+                        win <= '1';
                     end if;
 
-                when 3 =>
-                    if c > 0 then
-                        zwls <= zwls + get_lei(r, c - 1);
-                    end if;
-                    
-                    state := 4;
-                when 4 =>
-                    if c + 1 < get_len(r) then
-                        zwls <= zwls + get_lei(r, c + 1);
-                    end if;
-                    state := 5;
-
-                when 5 =>
-                    if r + 1 < n then
-                        zwls <= zwls + get_lei(r + 1, c);
-                    elsif r + 1 < 2 * n - 1 and c > 0 then 
-                        zwls <= zwls + get_lei(r + 1, c - 1);
-                    end if;
-
-                    state := 6;
-
-                when 6 =>
-                    if r + 1 < n then
-                        zwls <= zwls + get_lei(r + 1, c + 1);
-                    elsif r + 1 < 2 * n - 1 and c < get_len(r) - 1 then
-                        zwls <= zwls + get_lei(r + 1, c);
-                    end if;
-
-                    state := 7;
-                when 7 => null;
-                end case;
-
-            elsif mode = "11" and pos < tot then  --  初始化
-                grids(pos * 3 + 1 to pos * 3 + 2) <= "00";
-                if pos > 20 then
-                    remain <= remain + 1;
-                    
-                else
-                end if;
+                    state := 3;
                 
-                pos := pos + 1;
+                when 3 => null;
+
+                end case;
             end if;
         end if;
     end process;
+
 end;
