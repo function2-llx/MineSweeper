@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.std_logic_unsigned.all;
 
 entity rgbtestb is
 port
@@ -23,6 +24,7 @@ signal addr_a,addr_b:STD_LOGIC_VECTOR (14 DOWNTO 0):=(others=>'0');
 signal data_a,data_b:STD_LOGIC_VECTOR (15 DOWNTO 0);
 signal we_a,we_b:STD_LOGIC  := '0';
 signal q_a,q_b:STD_LOGIC_VECTOR (15 DOWNTO 0);
+signal prer,preg,preb,sr,sg,sb:std_logic_vector(31 downto 0);
 begin
 	ram:entity work.ram port map(address_a=>addr_a,address_b=>addr_b,clock_a=>clk,clock_b=>pclk,data_a=>data_a,data_b=>data_b,wren_a=>we_a,wren_b=>we_b,q_a=>q_a,q_b=>q_b);
 	process(clk)
@@ -85,6 +87,7 @@ begin
 	begin
 		if(pclk'event and pclk='1')then
 			if(rst='1')then
+				prer<=ir;preg<=ig;preb<=ib;
 				case iok is
 				when '0'=>
 					we_b<='1';

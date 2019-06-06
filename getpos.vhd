@@ -28,7 +28,7 @@ begin
 				sx<=0;sy<=0;n<=0;
 			else
 				ok<='0';
-				if(r>200 and g<50 and b<50)then
+				if(r<100 and g>200 and b<100)then
 					sx<=sx+x;
 					sy<=sy+y;
 					n<=n+1;

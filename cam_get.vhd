@@ -136,5 +136,6 @@ begin
 	--mem:entity work.rgbtestb port map(clk=>clk,pclk=>pclk,rst=>irst,ix=>tox,iy=>toy,ir=>tr,ig=>tg,ib=>tb,ored=>ored,ogreen=>ogreen,oblue=>oblue,vs=>ovs,hs=>ohs);
 	mem:entity work.rgbtestb port map(clk=>clk,pclk=>pclk,rst=>irst,ix=>vnum,iy=>tiy,ir=>tr,ig=>tg,ib=>tb,iok=>iok,ored=>ored,ogreen=>ogreen,oblue=>oblue,vs=>ovs,hs=>ohs);
 	pos1:entity work.getpos port map(clk=>pclk,x=>vnum,y=>tiy,r=>tr,g=>tg,b=>tb,ox=>p1x,oy=>p1y,ook=>p1ok);
-	posf:entity work.getfinpos port map(clk=>p1ok,x=>to_integer(signed(p1x)),y=>to_integer(signed(p1y)),ox=>posx,oy=>posy,is_long=>is_long,orst=>orst);
+	posx<=to_integer(signed(p1x));posy<=to_integer(signed(p1y));
+	--posf:entity work.getfinpos port map(clk=>p1ok,x=>to_integer(signed(p1x)),y=>to_integer(signed(p1y)),ox=>posx,oy=>posy,is_long=>is_long,orst=>orst);
 end get_bhv;
