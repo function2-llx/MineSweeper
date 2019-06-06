@@ -15,7 +15,8 @@ port
 end getfinpos;
 
 architecture getfinpos_bhv of getfinpos is
-signal px1,px2,py1,py2:integer:=2147483647;
+signal px1,py1:integer:=998244353;
+signal px2,py2:integer:=998244352;
 signal n:integer:=0;
 constant thr:integer:=20;
 begin
@@ -23,7 +24,7 @@ begin
 	begin
 		if(clk'event and clk='1')then
 			if(x>=px1 and x<=px2 and y>=py1 and y<=py2)then
-				if(n>=45)then
+				if(n>=60)then
 					orst<='1';
 					is_long<='1';
 					n<=0;
@@ -47,16 +48,16 @@ begin
 					orst<='0';
 				end if;
 				n<=0;
-				if(x>=0 and y=0)then
+				if(x>=0 and x<=480 and y>=0 and y<=640)then
 					px1<=x-thr;
 					px2<=x+thr;
 					py1<=y-thr;
 					py2<=y+thr;
 				else
-					px1<=2147483647;
-					py1<=2147483647;
-					px2<=2147483647;
-					py2<=2147483647;
+					px1<=998244353;
+					py1<=998244352;
+					px2<=998244353;
+					py2<=998244352;
 				end if;
 			end if;
 		end if;

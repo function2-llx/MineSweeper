@@ -86,23 +86,23 @@ begin
 	process(pclk)
 	begin
 		if(pclk'event and pclk='1')then
-			if(rst='1')then
+			case iok is
+			when '1'=>
 				prer<=ir;preg<=ig;preb<=ib;
-				case iok is
-				when '0'=>
-					we_b<='1';
+				we_b<='1';
+				if(rst='1' and ir>=200 and ir<=224 and prer-preg>=24 and prer-preb>=24 and ir-ig>=24 and ir-ib>=24)then
+					data_b<="0000000000111000";
+				else
 					data_b<="0000000"&ir(7 downto 5)&ig(7 downto 5)&ib(7 downto 5);
+				end if;
 --					if(ir>x"40" and ig>x"40" and ib>x"40")then
 --						data_b<="1";
 --					else
 --						data_b<="0";
 --					end if;
-				when '1'=>
-					we_b<='0';
-				end case;
-			else
+			when '0'=>
 				we_b<='0';
-			end if;
+			end case;
 		end if;
 	end process;			
 end rgb_bhv;

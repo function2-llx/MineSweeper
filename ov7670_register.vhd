@@ -54,7 +54,7 @@ begin
 				when x"11"=>sreg<=x"13e7";
 				when x"12"=>sreg<=x"6f9f";
 				when x"13"=>sreg<=x"0000";
-				when x"14"=>sreg<=x"1420";
+				when x"14"=>sreg<=x"1460";
 				when x"15"=>sreg<=x"2475";
 				when x"16"=>sreg<=x"2563";
 				when x"17"=>sreg<=x"26a5";
@@ -86,6 +86,17 @@ begin
 				when x"31"=>sreg<=x"4100";
 				when x"32"=>sreg<=x"4cff";
 				when x"33"=>sreg<=x"7710";
+				
+				--when x"34"=>sreg<=x"0700";
+				
+				
+				--when x"34"=>sreg<=x"4f60";
+				--when x"35"=>sreg<=x"504e";
+				--when x"36"=>sreg<=x"5112";
+				--when x"37"=>sreg<=x"5222";
+				--when x"38"=>sreg<=x"5352";
+				--when x"39"=>sreg<=x"543d";
+				
 				
 				--when x"31"=>sreg<=x"4112";
 				--when x"04"=>sreg<=x"139f";

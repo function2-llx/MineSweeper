@@ -108,7 +108,7 @@ begin
 				iok<='0';
 				--p1ok<='0';
 			when 1=>
-				tg(4 downto 2)<=d(7 downto 5);
+				tg(4 downto 3)<=d(7 downto 6);
 				tb(7 downto 3)<=d(4 downto 0);
 				--tr(7 downto 3)<=d(7 downto 3);
 				--tg(7 downto 5)<=d(2 downto 0);
@@ -135,7 +135,7 @@ begin
 	--mem:entity work.rgbtest port map(addr=>memadd,data=>memdata,oe=>memoe,re=>memre,cs=>memcs,clk=>clk,pclk=>pclk,rst=>irst,ix=>tox,iy=>toy,ir=>tr,ig=>tg,ib=>tb,ored=>ored,ogreen=>ogreen,oblue=>oblue,vs=>ovs,hs=>ohs);
 	--mem:entity work.rgbtestb port map(clk=>clk,pclk=>pclk,rst=>irst,ix=>tox,iy=>toy,ir=>tr,ig=>tg,ib=>tb,ored=>ored,ogreen=>ogreen,oblue=>oblue,vs=>ovs,hs=>ohs);
 	mem:entity work.rgbtestb port map(clk=>clk,pclk=>pclk,rst=>irst,ix=>vnum,iy=>tiy,ir=>tr,ig=>tg,ib=>tb,iok=>iok,ored=>ored,ogreen=>ogreen,oblue=>oblue,vs=>ovs,hs=>ohs);
-	pos1:entity work.getpos port map(clk=>pclk,x=>vnum,y=>tiy,r=>tr,g=>tg,b=>tb,ox=>p1x,oy=>p1y,ook=>p1ok);
-	posx<=to_integer(signed(p1x));posy<=to_integer(signed(p1y));
-	--posf:entity work.getfinpos port map(clk=>p1ok,x=>to_integer(signed(p1x)),y=>to_integer(signed(p1y)),ox=>posx,oy=>posy,is_long=>is_long,orst=>orst);
+	pos1:entity work.getpos port map(clk=>pclk,x=>vnum,y=>tiy,iok=>iok,r=>tr,g=>tg,b=>tb,ox=>p1x,oy=>p1y,ook=>p1ok);
+	--posx<=to_integer(signed(p1x));posy<=to_integer(signed(p1y));
+	posf:entity work.getfinpos port map(clk=>p1ok,x=>to_integer(signed(p1x)),y=>to_integer(signed(p1y)),ox=>posx,oy=>posy,is_long=>is_long,orst=>orst);
 end get_bhv;
