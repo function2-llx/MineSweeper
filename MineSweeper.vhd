@@ -91,8 +91,8 @@ begin
     led_raw(42 to 48) <= leds(6);
     led_raw(49 to 55) <= leds(7);
     decoder0: decoder port map("1010", leds(0));
-    decoder1: decoder port map(mx(3 downto 0), leds(1));
-    decoder2: decoder port map(mx(7 downto 4), leds(2));
+    -- decoder1: decoder port map(mx(3 downto 0), leds(1));
+    -- decoder2: decoder port map(mx(7 downto 4), leds(2));
 
     vga_ram_inst : vga_ram PORT MAP (
 		clock	 => clk100M,
@@ -129,7 +129,7 @@ begin
         mousey => my,
         error_no_ack => error_no_ack
     );
-    
+
     process(clk100M)
         variable cnt: std_logic_vector(0 to 20);
     begin
