@@ -5,7 +5,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity MineSweeper is
     port (
-        clk100M, rst: in std_logic;
+        clk100M, rst, clk: in std_logic;
 
         led_raw: out std_logic_vector(0 to 55);
 
@@ -34,7 +34,7 @@ architecture bhv of MineSweeper is
         );
     end component;
 
-    -- signal board_ctrl: std_logic := '1';
+    signal board_ctrl: std_logic;
     signal mode: std_logic_vector(0 to 1) := "00";
     signal r, c: integer range 0 to 31;
     signal lose, win: std_logic;
@@ -141,8 +141,8 @@ begin
     
     board_ins: board port map (
         clk100M => clk100M,
-        rst => lbtn or rbtn,
-        mode_in => (not lbtn) & (not rbtn),
+        rst => board_ctrl,
+        mode_in => mode,
         r => r,
         c => c,
         lose => lose,
@@ -153,9 +153,72 @@ begin
         vga_in => vga_in
     );
 
+    process(lbtn, rbtn, mbtn, clk100M)
+    begin
+        if clk100M'event and clk100M = '1' then
+            if lbtn = '1' then
+                mode <= "01";
+                board_ctrl <= '1';
+            elsif rbtn = '1' then
+                mode <= "10";
+                board_ctrl <= '1';
+            elsif mbtn = '1' then
+                mode <= "00";
+                board_ctrl <= '1';
+            else
+                board_ctrl <= '0';
+            end if;
+        end if;
+    end process;
+
+    -- process(lbtn)
+    -- begin
+    --     if lbtn'event and lbtn = '1'then
+    --         mode <= "01";
+    --         board_ctrl <= '1';
+    --     end if;
+    -- end process;
+
+    -- process(lbtn)
+    -- begin
+    --     if lbtn'event and lbtn = '0'then
+    --         board_ctrl <= '0';
+    --     end if;
+    -- end process;
+
+    -- process(rbtn)
+    -- begin
+    --     if rbtn'event and rbtn = '1'then
+    --         mode <= "01";
+    --         board_ctrl <= '1';
+    --     end if;
+    -- end process;
+
+    -- process(rbtn)
+    -- begin
+    --     if rbtn'event and rbtn = '0'then
+    --         board_ctrl <= '0';
+    --     end if;
+    -- end process;
+
+    -- process(mbtn)
+    -- begin
+    --     if mbtn'event and mbtn = '1'then
+    --         mode <= "01";
+    --         board_ctrl <= '1';
+    --     end if;
+    -- end process;
+
+    -- process(mbtn)
+    -- begin
+    --     if mbtn'event and mbtn = '0'then
+    --         board_ctrl <= '0';
+    --     end if;
+    -- end process;
+ 
     mouse: ps2_mouse port map (
         clk_in => clk100M,
-        reset_in => rst, 
+        reset_in => clk,    --  用于鼠标死了的情况
         ps2_clk => ps2_clk,
         ps2_data => ps2_data,
         left_button => lbtn,
