@@ -42,16 +42,16 @@ USE altera_mf.all;
 ENTITY digital_rom_cut IS
 	PORT
 	(
-		address		: IN STD_LOGIC_VECTOR (13 DOWNTO 0);
+		address		: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
 		clock		: IN STD_LOGIC ;
-		q		: OUT STD_LOGIC_VECTOR(2 DOWNTO 0)
+		q		: OUT STD_LOGIC_VECTOR(8 DOWNTO 0)
 	);
 END digital_rom_cut;
 
 
 ARCHITECTURE SYN OF digital_rom_cut IS
 
-	SIGNAL sub_wire0	: STD_LOGIC_VECTOR(2 DOWNTO 0);
+	SIGNAL sub_wire0	: STD_LOGIC_VECTOR(8 DOWNTO 0);
 
 
 
@@ -73,8 +73,8 @@ ARCHITECTURE SYN OF digital_rom_cut IS
 	);
 	PORT (
 			clock0	: IN STD_LOGIC ;
-			address_a	: IN STD_LOGIC_VECTOR (13 DOWNTO 0);
-			q_a	: OUT STD_LOGIC_VECTOR(2 DOWNTO 0)
+			address_a	: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
+			q_a	: OUT STD_LOGIC_VECTOR(8 DOWNTO 0)
 	);
 	END COMPONENT;
 
@@ -85,16 +85,16 @@ BEGIN
 	GENERIC MAP (
 		clock_enable_input_a => "BYPASS",
 		clock_enable_output_a => "BYPASS",
-		init_file => "cut_64_64.mif",--digital
+		init_file => "hex.mif",--digital
 		intended_device_family => "Cyclone II",
 		lpm_hint => "ENABLE_RUNTIME_MOD=NO",
 		lpm_type => "altsyncram",
-		numwords_a => 4096,--4096 = 2 ^ 12 = 64 * 64
+		numwords_a => 40960,--4096 = 2 ^ 12 = 64 * 64
 		operation_mode => "ROM",
 		outdata_aclr_a => "NONE",
 		outdata_reg_a => "UNREGISTERED",
-		widthad_a => 14,
-		width_a => 3,--1
+		widthad_a => 16,
+		width_a => 9,--1
 		width_byteena_a => 1
 	)
 	PORT MAP (

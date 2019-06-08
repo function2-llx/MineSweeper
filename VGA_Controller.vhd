@@ -8,95 +8,79 @@ port(
 	clk_0,reset: in std_logic;
 	clicker: in std_logic;--新增测试按键
 	hs,vs: out STD_LOGIC; 
-	r,g,b: out STD_LOGIC_vector(2 downto 0)
+	r,g,b: out STD_LOGIC_vector(2 downto 0);
+	addr: out std_logic_vector(7 downto 0);
+	data: in std_logic_vector(3 downto 0);
+	mouse_x: in std_logic_vector(9 downto 0);--鼠标x坐标
+	mouse_y: in std_logic_vector(8 downto 0) --鼠标y坐标
 );
 end VGA_Controller;
 
 architecture vga_rom of VGA_Controller is
 
-component vga640480 is
-	 port(
-			address		:		  out	STD_LOGIC_VECTOR(13 DOWNTO 0);
-			reset       :       in  STD_LOGIC;
-			clk25       :		  out std_logic; 
-			q		      :		  in STD_LOGIC_vector(2 downto 0);
-			clicker     :       in std_logic;--新增测试按键
-			clk_0       :       in  STD_LOGIC; --100M时钟输入
-			hs,vs       :       out STD_LOGIC; --行同步、场同步信号
-			r,g,b       :       out STD_LOGIC_vector(2 downto 0)
-	  );
-end component;
-
---component digital_rom_r IS
---	PORT
---	(
---		address		: IN STD_LOGIC_VECTOR (13 DOWNTO 0);
---		clock		: IN STD_LOGIC ;
---		q		: OUT STD_LOGIC
---	);
---END component;
---component digital_rom_g IS
---	PORT
---	(
---		address		: IN STD_LOGIC_VECTOR (13 DOWNTO 0);
---		clock		: IN STD_LOGIC ;
---		q		: OUT STD_LOGIC
---	);
---END component;
---component digital_rom_b IS
---	PORT
---	(
---		address		: IN STD_LOGIC_VECTOR (13 DOWNTO 0);
---		clock		: IN STD_LOGIC ;
---		q		: OUT STD_LOGIC
---	);
---END component;
-component digital_rom_cut IS
-	PORT
-	(
-		address		: IN STD_LOGIC_VECTOR (13 DOWNTO 0);
-		clock		: IN STD_LOGIC ;
-		q		: OUT STD_LOGIC_VECTOR(2 DOWNTO 0)
-	);
-END component;
-
-signal address_tmp: std_logic_vector(13 downto 0);
-signal clk25: std_logic;
-signal q_tmp: std_logic_vector(2 downto 0);
-
+	component vga640480 is
+		 port(
+				address		:		  out	STD_LOGIC_VECTOR(15 DOWNTO 0);
+				reset       :       in  STD_LOGIC;
+				clk25       :		  out std_logic; 
+				q		      :		  in STD_LOGIC_vector(8 downto 0);
+				clicker     :       in std_logic;--新增测试按键
+				clk_0       :       in  STD_LOGIC; --100M时钟输入
+				hs,vs       :       out STD_LOGIC; --行同步、场同步信号
+				r,g,b       :       out STD_LOGIC_vector(2 downto 0);
+				addr        :       out std_logic_vector(7 downto 0);
+				data        :       in std_logic_vector(3 downto 0);
+				mouse_x     :       in std_logic_vector(9 downto 0);--鼠标x坐标
+				mouse_y     :       in std_logic_vector(8 downto 0) --鼠标y坐标
+	--			
+	--			BASERAMWE           : out std_logic;   --write
+	--			BASERAMOE           : out std_logic;    --read
+	--			BASERAMCE           : out std_logic;		--cs
+	--			BASERAMADDR         : out std_logic_vector(19 downto 0);
+	--			BASERAMDATA         : inout std_logic_vector(31 downto 0)
+		  );
+	end component;
+	
+	component digital_rom_cut IS
+		PORT
+		(
+			address		: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
+			clock		: IN STD_LOGIC ;
+			q		: OUT STD_LOGIC_VECTOR(8 DOWNTO 0)
+		);
+	END component;
+	
+	signal address_tmp: std_logic_vector(15 downto 0);
+	signal clk25: std_logic;
+	signal q_tmp: std_logic_vector(8 downto 0);
 
 begin
 
-u1: vga640480 port map(
-						address=>address_tmp, 
-						reset=>reset, 
-						clk25=>clk25, 
-						q=>q_tmp,
-						clicker=>clicker,
-						clk_0=>clk_0, 
-						hs=>hs, vs=>vs, 
-						r=>r, g=>g, b=>b
-					);
---ur: digital_rom_r port map(	
---						address=>address_tmp, 
---						clock=>clk25, 
---						q=>q_tmp(2)
---					);
---ug: digital_rom_g port map(	
---						address=>address_tmp, 
---						clock=>clk25, 
---						q=>q_tmp(1)
---					);
---ub: digital_rom_b port map(	
---						address=>address_tmp, 
---						clock=>clk25, 
---						q=>q_tmp(0)
---					);
-utest: digital_rom_cut port map(	
-						address=>address_tmp, 
-						clock=>clk25, 
-						q=>q_tmp
-					);
+	u1: vga640480 port map(
+							address=>address_tmp, 
+							reset=>reset, 
+							clk25=>clk25, 
+							q=>q_tmp,
+							clicker=>clicker,
+							clk_0=>clk_0, 
+							hs=>hs, vs=>vs, 
+							r=>r, g=>g, b=>b,
+							addr=>addr,
+							data=>data,
+							mouse_x=>mouse_x,
+							mouse_y=>mouse_y
+	--						
+	--						BASERAMWE<=BASERAMWE,
+	--						BASERAMOE<=BASERAMOE,
+	--						BASERAMCE<=BASERAMCE,
+	--						BASERAMADDR<=BASERAMADDR,
+	--						BASERAMDATA<=BASERAMDATA
+						);
+	utest: digital_rom_cut port map(	
+							address=>address_tmp, 
+							clock=>clk25, 
+							q=>q_tmp
+						);
 
 end vga_rom;
 
