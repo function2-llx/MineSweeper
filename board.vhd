@@ -32,7 +32,6 @@ architecture bhv of board is
     signal grid_addr: std_logic_vector(7 downto 0);
     signal grid_data: std_logic_vector(3 downto 0);
 
-
     component board_ram IS
         PORT (
             clock		: IN STD_LOGIC  := '1';
@@ -53,7 +52,7 @@ architecture bhv of board is
         if c <= n - 1 then
             return conv_std_logic_vector(c * (c + 1) / 2 + r, 8);
         end if;
-    
+
         if c <= 3 * n - 3 then
             if (c - n) mod 2 = 0 then
                 return conv_std_logic_vector(n * (n + 1) / 2 + (2 * n - 1) * ((c - n) / 2) + r, 8);
@@ -61,10 +60,28 @@ architecture bhv of board is
                 return conv_std_logic_vector(n * (n + 1) / 2 + (2 * n - 1) * ((c - n) / 2) + n - 1 + r, 8);
             end if;
         end if;
-            
+
         return conv_std_logic_vector((n + 1) * n / 2 + (n - 1) * (2 * n - 1) + (c - 3 * n + 2) * (5 * n - c - 3) / 2 + r, 8);
     end function;
 
+    -- function legal(c: integer; r: integer) return std_logic_vector is
+    -- begin
+    --     if c <= n - 1 then
+    --         return conv_std_logic_vector(c * (c + 1) / 2 + r, 8);
+    --     end if;
+
+    --     if c <= 3 * n - 3 then
+    --         if (c - n) mod 2 = 0 then
+    --             return conv_std_logic_vector(n * (n + 1) / 2 + (2 * n - 1) * ((c - n) / 2) + r, 8);
+    --         else
+    --             return conv_std_logic_vector(n * (n + 1) / 2 + (2 * n - 1) * ((c - n) / 2) + n - 1 + r, 8);
+    --         end if;
+    --     end if;
+
+    --     return conv_std_logic_vector((n + 1) * n / 2 + (n - 1) * (2 * n - 1) + (c - 3 * n + 2) * (5 * n - c - 3) / 2 + r, 8);
+    -- end function;
+
+    signal clk50M, clk25M: std_logic;
 begin
     grid_ram_inst : grid_ram PORT MAP (
 		address	 => grid_addr,
@@ -81,7 +98,7 @@ begin
 		q	 => board_out
     );
     
-    process(rst, clk100M)
+    process(rst, clk25M)
         variable addr: std_logic_vector(7 downto 0);
         variable mode: std_logic_vector(0 to 1);
         variable state: integer range 0 to 3;
@@ -93,18 +110,19 @@ begin
         constant unknown_state: std_logic_vector(3 downto 0) := "1001";
 
     begin
-        if rst = '0' then
-            mode := mode_in;
+        if rst = '1' then
             state := 0;
             oper := tot;
-
-            if mode = "00" then
+            
+            if mode_in = "00" then
+                mode := mode_in;
                 addr := (others => '0');
-            elsif mode = "01" or mode = "10" then
+            elsif mode_in = "01" or mode_in = "10" then
+                mode := mode_in;
                 addr := get_addr(c, r);
             end if;
 
-        elsif clk100M'event and clk100M = '1' then
+        elsif clk25M'event and clk25M = '1' then
             if mode = "00" then --  初始化
                 case state is
                 when 0 =>
@@ -208,6 +226,21 @@ begin
 
                 end case;
             end if;
+        end if;
+    end process;
+
+    process(clk100M)
+        variable cnt: std_logic_vector(0 to 20);
+    begin
+        if clk100M'event and clk100M = '1' then
+            clk50M <= not clk50M;
+        end if;
+    end process;
+
+    process(clk50M)
+    begin
+        if clk50M'event and clk50M = '1' then
+            clk25M <= not clk25M;
         end if;
     end process;
 

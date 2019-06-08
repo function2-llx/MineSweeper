@@ -24,8 +24,8 @@ end ps2_mouse;
 
 architecture behavioral of ps2_mouse is
 
-constant x_max:  integer:=640;
-constant y_max:  integer:=480;
+constant x_max:  integer:=1024;
+constant y_max:  integer:=1024;
 
 
 constant total_bits     : integer:=33; -- number of bits in one full packet

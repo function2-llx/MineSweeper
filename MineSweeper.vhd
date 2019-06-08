@@ -10,7 +10,10 @@ entity MineSweeper is
         led_raw: out std_logic_vector(0 to 55);
 
         ps2_clk: inout std_logic;
-        ps2_data: inout std_logic
+        ps2_data: inout std_logic;
+
+        hs,vs: out STD_LOGIC; 
+        vga_r, vga_g, vga_b: out STD_LOGIC_vector(2 downto 0)
     );
 end entity;
 architecture bhv of MineSweeper is
@@ -31,7 +34,7 @@ architecture bhv of MineSweeper is
         );
     end component;
 
-    signal board_ctrl: std_logic := '1';
+    -- signal board_ctrl: std_logic := '1';
     signal mode: std_logic_vector(0 to 1) := "00";
     signal r, c: integer range 0 to 31;
     signal lose, win: std_logic;
@@ -88,6 +91,21 @@ architecture bhv of MineSweeper is
             rout: out integer range 0 to 5  --5 means illegal row
         );
     end component;
+
+    signal r_tmp: std_logic_vector(7 downto 0);
+ 
+    component VGA_Controller is
+        port(
+            clk_0,reset: in std_logic;
+            clicker: in std_logic;--新增测试按键
+            hs,vs: out STD_LOGIC; 
+            r,g,b: out STD_LOGIC_vector(2 downto 0);
+            addr: out std_logic_vector(7 downto 0);
+            data: in std_logic_vector(3 downto 0);
+            mouse_x: in std_logic_vector(9 downto 0);--鼠标x坐标
+            mouse_y: in std_logic_vector(8 downto 0) --鼠标y坐标
+        );
+    end component;
 begin
     -- 点灯与测试
     led_raw(0 to 6) <= leds(0);
@@ -100,16 +118,17 @@ begin
     led_raw(49 to 55) <= leds(7);
     decoder0: decoder port map("1010", leds(0));
 
+    r_tmp <= conv_std_logic_vector(r, 8);
+
     -- mx
     decoder1: decoder port map(mx(3 downto 0), leds(1));
     decoder2: decoder port map(mx(7 downto 4), leds(2));
     decoder3: decoder port map("00" & mx(9 downto 8), leds(3));
+    -- decoder1: decoder port map(r_tmp(3 downto 0), leds(1));
+    -- decoder2: decoder port map("000" & r_tmp(4), leds(2));
+    -- decoder3: decoder port map(conv_std_logic_vector(c, 4)(3 downto 0), leds(3));
 
-    decoder4: decoder port map(my(3 downto 0), leds(4));
-    decoder5: decoder port map(my(7 downto 4), leds(5));
-    decoder6: decoder port map("00" & my(9 downto 8), leds(6));
-
-    decoder7: decoder port map("0" & lbtn & rbtn & mbtn, leds(7));
+    decoder4: decoder port map("0" & lbtn & mbtn & rbtn, leds(4));
 
     vga_ram_inst : vga_ram PORT MAP (
 		clock	 => clk100M,
@@ -122,8 +141,8 @@ begin
     
     board_ins: board port map (
         clk100M => clk100M,
-        rst => rst,
-        mode_in => (not lbtn) & (not rbtn)
+        rst => lbtn or rbtn,
+        mode_in => (not lbtn) & (not rbtn),
         r => r,
         c => c,
         lose => lose,
@@ -155,6 +174,22 @@ begin
 		rout => r
     );
 
+    vga_ins: VGA_Controller port map (
+        clk_0 => clk100M,
+        reset => rst,
+        clicker => '1',
+        hs => hs,
+        vs => vs,
+        r => vga_r,
+        g => vga_g,
+        b => vga_b,
+        addr => vga_rdaddr,
+        data => vga_out,
+        mouse_x => mx,
+        mouse_y => my(8 downto 0)
+    );
+
+
     process(clk100M)
         variable cnt: std_logic_vector(0 to 20);
     begin
@@ -169,5 +204,6 @@ begin
             clk25M <= not clk25M;
         end if;
     end process;
+
 
 end architecture;

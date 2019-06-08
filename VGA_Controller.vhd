@@ -54,6 +54,7 @@ architecture vga_rom of VGA_Controller is
 	signal clk25: std_logic;
 	signal q_tmp: std_logic_vector(8 downto 0);
 
+	constant n: integer := 5;
 begin
 
 	u1: vga640480 port map(
