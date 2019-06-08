@@ -5,7 +5,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity board is
     port(
-        clk, rst: in std_logic;
+        clk100M, rst: in std_logic;
         
         mode_in: in std_logic_vector(0 to 1);  -- 01：左击；10：右击；11：初始化
         r, c: in integer range 0 to 31;
@@ -70,12 +70,12 @@ architecture bhv of board is
 begin
     grid_ram_inst : grid_ram PORT MAP (
 		address	 => grid_addr,
-		clock	 => clk,
+		clock	 => clk100M,
 		q	 => grid_data
     );
     
     board_ram_inst : board_ram PORT MAP (
-		clock	 => clk,
+		clock	 => clk100M,
 		data	 => board_in,
 		rdaddress	 => board_rdaddr,
 		wraddress	 => board_wraddr,
@@ -83,7 +83,7 @@ begin
 		q	 => board_out
     );
     
-    process(rst, clk)
+    process(rst, clk100M)
         variable addr: std_logic_vector(7 downto 0);
         variable mode: std_logic_vector(0 to 1);
         variable state: integer range 0 to 3;
@@ -106,7 +106,7 @@ begin
                 addr := get_addr(c, r);
             end if;
 
-        elsif clk'event and clk = '1' then
+        elsif clk100M'event and clk100M = '1' then
             if mode = "00" then --  初始化
                 case state is
                 when 0 =>
