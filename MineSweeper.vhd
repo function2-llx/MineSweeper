@@ -85,8 +85,7 @@ architecture bhv of MineSweeper is
 
     component bit_to_coordinate is
         port(
-            enabled: in std_logic;
-            xin, yin: in integer range 0 to 1600;
+            x, y: in integer range 0 to 1600;
             cout: out integer range 0 to 17;--17 means illegal column
             rout: out integer range 0 to 5  --5 means illegal row
         );
@@ -230,9 +229,8 @@ begin
     );
 
     btc_ins: bit_to_coordinate port map (
-		enabled => '1',
-        xin => conv_integer(mx),
-        yin => conv_integer(my),
+        x => conv_integer(mx),
+        y => conv_integer(my),
 		cout => c,
 		rout => r
     );
