@@ -7,7 +7,6 @@ entity bit_to_coordinate is
 	port(
 		enabled: in std_logic;
 		xin, yin: in integer range 0 to 1600;
-		holding: in std_logic;
 		cout: out integer range 0 to 17;--17 means illegal column
 		rout: out integer range 0 to 5  --5 means illegal row
 	);
@@ -16,7 +15,7 @@ end bit_to_coordinate;
 architecture bhv of bit_to_coordinate is
 	
 begin
-	process(enabled, xin, yin, holding)
+	process(enabled, xin, yin)
 		variable x, y: integer;
 	begin
 		x := yin;

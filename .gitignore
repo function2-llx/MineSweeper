@@ -3,6 +3,7 @@ incremental_db/
 output_files/
 simulation/
 .vscode/
+greybox_tmp/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

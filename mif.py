@@ -1,6 +1,6 @@
 from random import randint
 
-n = 4
+n = 5
 tot = 3 * n ** 2 - 3 * n + 1
 
 c_size = [i + 1 for i in range(n)] + [n - 1, n] * (n - 1) + [i + 1 for i in reversed(range(n - 1))]

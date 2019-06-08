@@ -14,7 +14,6 @@ entity MineSweeper is
     );
 end entity;
 architecture bhv of MineSweeper is
-    constant n: integer := 4;
     signal clk50M, clk25M: std_logic;
 
     component board is
@@ -80,6 +79,15 @@ architecture bhv of MineSweeper is
     signal lbtn, rbtn, mbtn: std_logic;
     signal mx, my: std_logic_vector(9 downto 0);
     signal error_no_ack: std_logic;
+
+    component bit_to_coordinate is
+        port(
+            enabled: in std_logic;
+            xin, yin: in integer range 0 to 1600;
+            cout: out integer range 0 to 17;--17 means illegal column
+            rout: out integer range 0 to 5  --5 means illegal row
+        );
+    end component;
 begin
     -- 点灯与测试
     led_raw(0 to 6) <= leds(0);
@@ -91,8 +99,17 @@ begin
     led_raw(42 to 48) <= leds(6);
     led_raw(49 to 55) <= leds(7);
     decoder0: decoder port map("1010", leds(0));
-    -- decoder1: decoder port map(mx(3 downto 0), leds(1));
-    -- decoder2: decoder port map(mx(7 downto 4), leds(2));
+
+    -- mx
+    decoder1: decoder port map(mx(3 downto 0), leds(1));
+    decoder2: decoder port map(mx(7 downto 4), leds(2));
+    decoder3: decoder port map("00" & mx(9 downto 8), leds(3));
+
+    decoder4: decoder port map(my(3 downto 0), leds(4));
+    decoder5: decoder port map(my(7 downto 4), leds(5));
+    decoder6: decoder port map("00" & my(9 downto 8), leds(6));
+
+    decoder7: decoder port map("0" & lbtn & rbtn & mbtn, leds(7));
 
     vga_ram_inst : vga_ram PORT MAP (
 		clock	 => clk100M,
@@ -106,7 +123,7 @@ begin
     board_ins: board port map (
         clk100M => clk100M,
         rst => rst,
-        mode_in => mode,
+        mode_in => (not lbtn) & (not rbtn)
         r => r,
         c => c,
         lose => lose,
@@ -130,6 +147,14 @@ begin
         error_no_ack => error_no_ack
     );
 
+    btc_ins: bit_to_coordinate port map (
+		enabled => '1',
+        xin => conv_integer(mx),
+        yin => conv_integer(my),
+		cout => c,
+		rout => r
+    );
+
     process(clk100M)
         variable cnt: std_logic_vector(0 to 20);
     begin
@@ -144,5 +169,5 @@ begin
             clk25M <= not clk25M;
         end if;
     end process;
-    
+
 end architecture;

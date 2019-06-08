@@ -19,16 +19,14 @@ entity board is
 end entity;
 
 architecture bhv of board is
-    constant n: integer := 4;
+    constant n: integer := 5;
     constant tot: integer := 3 * n * n - 3 * n + 1;
-
-
     component grid_ram IS
-	PORT (
-		address		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-		clock		: IN STD_LOGIC  := '1';
-		q		: OUT STD_LOGIC_VECTOR (3 DOWNTO 0)
-    );
+        PORT (
+            address		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+            clock		: IN STD_LOGIC  := '1';
+            q		: OUT STD_LOGIC_VECTOR (3 DOWNTO 0)
+        );
     END component;
 
     signal grid_addr: std_logic_vector(7 downto 0);
@@ -36,14 +34,14 @@ architecture bhv of board is
 
 
     component board_ram IS
-	PORT (
-		clock		: IN STD_LOGIC  := '1';
-		data		: IN STD_LOGIC_VECTOR (1 DOWNTO 0);
-		rdaddress		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-		wraddress		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-		wren		: IN STD_LOGIC  := '0';
-		q		: OUT STD_LOGIC_VECTOR (1 DOWNTO 0)
-	);
+        PORT (
+            clock		: IN STD_LOGIC  := '1';
+            data		: IN STD_LOGIC_VECTOR (1 DOWNTO 0);
+            rdaddress		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+            wraddress		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+            wren		: IN STD_LOGIC  := '0';
+            q		: OUT STD_LOGIC_VECTOR (1 DOWNTO 0)
+        );
     END component;
 
     signal board_in, board_out: std_logic_vector(1 downto 0);
