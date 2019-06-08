@@ -27,7 +27,7 @@ architecture behavior of vga640480 is
 	signal vector_x   : std_logic_vector(9 downto 0);		--X坐标
 	signal vector_y   : std_logic_vector(8 downto 0);		--Y坐标
 	signal clk, CLK_2	: std_logic;
-	
+	constant n        : integer := 5;
 	function get_addr(c: integer; r: integer) return std_logic_vector is
 	begin
 		  if c <= n - 1 then
@@ -156,7 +156,7 @@ begin
 		elsif(clk'event and clk='1')then
 		  if clicker='0' then
 			if (vector_x(9 downto 6) = "0010" and vector_y(8 downto 6) = "010") or (vector_x(9 downto 6) = "0100" and vector_y(8 downto 6) = "010") then
-				address <= "00" & vector_y(5 downto 0) & vector_x(5 downto 0);--64 * 64
+				address <= "0000" & vector_y(5 downto 0) & vector_x(5 downto 0);--64 * 64
 				r1 <= q(8 downto 6);
 				g1 <= q(5 downto 3);
 				b1 <= q(2 downto 0);
@@ -416,7 +416,6 @@ begin
 				g1	<= "000";
 				b1	<= "000";
 			else
-				state_c := conv_integer(data);
 				if data <= 6 then
 					prefix := data + 1;
 				elsif data = "0111" then
