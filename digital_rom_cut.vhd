@@ -85,11 +85,11 @@ BEGIN
 	GENERIC MAP (
 		clock_enable_input_a => "BYPASS",
 		clock_enable_output_a => "BYPASS",
-		init_file => "hex.mif",--digital
+		init_file => "hex_s.mif",--digital
 		intended_device_family => "Cyclone II",
 		lpm_hint => "ENABLE_RUNTIME_MOD=NO",
 		lpm_type => "altsyncram",
-		numwords_a => 40960,--4096 = 2 ^ 12 = 64 * 64
+		numwords_a => 65536,--4096 = 2 ^ 12 = 64 * 64
 		operation_mode => "ROM",
 		outdata_aclr_a => "NONE",
 		outdata_reg_a => "UNREGISTERED",
