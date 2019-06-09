@@ -143,7 +143,7 @@ begin
 	process(reset,clk,vector_x,vector_y,clicker) -- XY坐标定位控制
 		variable x: integer;
 		variable y: integer;
-		variable cout: integer range 0 to 20; -- 17 is word area; 18 is num area; 19 is illegal but in 640 * 480; 20 is out of range
+		variable cout: integer range 0 to 21; -- 17 is word area; 18 is 10x num area; 19 is 1x num area; 20 is illegal but in 640 * 480; 21 is out of range
 		variable rout: integer range 0 to 4;
 		variable vectors_x: std_logic_vector(5 downto 0);
 		variable vectors_y: std_logic_vector(5 downto 0);
@@ -410,19 +410,22 @@ begin
 				cout := 17;
 				vectors_y := conv_std_logic_vector(y - 16, 6);
 				vectors_x := conv_std_logic_vector(x - 502, 6);
-			elsif (x >= 566 and x < 630 and y >= 16 and y < 80) then
+			elsif (x >= 566 and x < 598 and y >= 16 and y < 80) then
 				cout := 18;
 				-- to do
-			elsif (x < 640 and y < 480) then
+			elsif (x >= 598 and x < 630 and y >= 16 and y < 80) then
 				cout := 19;
-			else -- 消隐区必须明确输出置0
+				-- to do
+			elsif (x < 640 and y < 480) then
 				cout := 20;
+			else -- 消隐区必须明确输出置0
+				cout := 21;
 			end if;
-			if cout = 19 then
+			if cout = 20 then
 				r1 <= "111";
 				g1	<= "111";
 				b1	<= "111";
-			elsif cout = 20 then
+			elsif cout = 21 then
 				r1 <= "000";
 				g1	<= "000";
 				b1	<= "000";
@@ -434,9 +437,14 @@ begin
 				b1 <= q(2 downto 0);
 			elsif cout = 18 then
 				-- to do
-				r1 <= "011";
+				r1 <= "000";
 				g1	<= "011";
-				b1	<= "100";
+				b1	<= "111";
+			elsif cout = 19 then
+				-- to do
+				r1 <= "011";
+				g1	<= "000";
+				b1	<= "111";
 			else
 				if data <= 6 then
 					prefix := data + 1;
