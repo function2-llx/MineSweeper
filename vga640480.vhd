@@ -144,7 +144,7 @@ begin
 		variable x: integer;
 		variable y: integer;
 		variable cout: integer range 0 to 16;
-		variable rout: integer range 0 to 5; -- 5 is illegal
+		variable rout: integer range 0 to 6; -- 5 is illegal but in 640 * 480; 6 is out of range
 		variable vectors_x: std_logic_vector(5 downto 0);
 		variable vectors_y: std_logic_vector(5 downto 0);
 		variable prefix: std_logic_vector(3 downto 0);
@@ -406,13 +406,19 @@ begin
 				vectors_y := conv_std_logic_vector((y + 72) mod 96, 6);
 				vectors_x := conv_std_logic_vector((x + 40) mod 56, 6);
 				--line 16: y [8 + 96 * 2, 8 + 64 * 7 - 96 * 2), x [16 + 1 * 56, 16 + 2 * 56) || [16 + 9 * 56, 16 + 10 * 56)
-			else 
+			elsif (x < 640 and y < 480) then
 				rout := 5;
---					r1 <= "000";
---					g1	<= "000";
---					b1	<= "000";
+--				r1 <= "111";
+--				g1	<= "000";
+--				b1	<= "111";
+			else
+				rout := 6;
 			end if;
 			if rout = 5 then
+				r1 <= "111";
+				g1	<= "111";
+				b1	<= "111";
+			elsif rout = 6 then
 				r1 <= "000";
 				g1	<= "000";
 				b1	<= "000";
@@ -433,8 +439,8 @@ begin
 			end if;
 			if (vector_x = mouse_x and vector_y + 4 >= mouse_y and vector_y <= mouse_y + 4) or (vector_y = mouse_y and vector_x + 4 >= mouse_x and vector_x <= mouse_x + 4) then
 				r1 <= "000";
-				g1 <= "000";
-				b1 <= "111";
+				g1 <= "111";
+				b1 <= "000";
 			end if;
 		  end if;
 		end if;	 
