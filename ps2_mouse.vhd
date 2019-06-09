@@ -73,9 +73,10 @@ signal output_strobe : std_logic;    -- latches data into the output registers(é
 signal packet_good : std_logic;      -- check whether the data is valid 
 signal clk,reset : std_logic;  
 signal count : std_logic_vector(20 downto 0);  
+signal rst_auto: std_logic := '0';
 
 begin
-reset<=not reset_in;
+reset<= (not reset_in) or rst_auto;
 ps2_clk <= '0' when ps2_clk_hi_z='0' else 'Z';
 ps2_data <= '0' when ps2_data_hi_z='0' else 'Z';
 
@@ -183,6 +184,7 @@ begin
 
   case m2_state is
     when m2_reset =>    -- after reset, send command to mouse.
+      rst_auto <= '0';
       m2_next_state <= m2_hold_clk_l;
 
     when m2_wait =>
@@ -267,8 +269,14 @@ begin
       end if;
 -------------------------------------------------------------------------
     when m2_error_no_ack =>
-      error_no_ack <= '0';
-      m2_next_state <= m2_reset;
+      -- if rst_auto = '0' then
+        error_no_ack <= '0';
+        rst_auto <= '1';
+        -- m2_next_state <= m2_error_no_ack;
+      -- else
+      -- rst_auto <= '0';
+      --   m2_next_state <= m2_reset;
+      -- end if;
     
     when m2_await_response =>
       m2_next_state <= m2_use;
