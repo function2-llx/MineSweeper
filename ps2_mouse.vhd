@@ -267,8 +267,8 @@ begin
       end if;
 -------------------------------------------------------------------------
     when m2_error_no_ack =>
-      error_no_ack <= '1';
-      m2_next_state <= m2_error_no_ack;
+      error_no_ack <= '0';
+      m2_next_state <= m2_reset;
     
     when m2_await_response =>
       m2_next_state <= m2_use;

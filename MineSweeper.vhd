@@ -85,7 +85,6 @@ architecture bhv of MineSweeper is
 
     component bit_to_coordinate is
         port(
-            enabled: in std_logic;
             xin, yin: in integer range 0 to 1600;
             cout: out integer range 0 to 17;--17 means illegal column
             rout: out integer range 0 to 5  --5 means illegal row
@@ -116,19 +115,27 @@ begin
     led_raw(35 to 41) <= leds(5);
     led_raw(42 to 48) <= leds(6);
     led_raw(49 to 55) <= leds(7);
-    decoder0: decoder port map("1010", leds(0));
+
+
+    -- decoder0: decoder port map("1010", leds(0));
 
     r_tmp <= conv_std_logic_vector(r, 8);
 
-    -- mx
-    decoder1: decoder port map(mx(3 downto 0), leds(1));
-    decoder2: decoder port map(mx(7 downto 4), leds(2));
-    decoder3: decoder port map("00" & mx(9 downto 8), leds(3));
+    decoder0: decoder port map(mx(3 downto 0), leds(0));
+    decoder1: decoder port map(mx(7 downto 4), leds(1));
+    decoder2: decoder port map("00" & mx(9 downto 8), leds(2));
+    decoder3: decoder port map(my(3 downto 0), leds(3));
+    decoder4: decoder port map(my(7 downto 4), leds(4));
+    decoder5: decoder port map("00" & my(9 downto 8), leds(5));
+
+    decoder6: decoder port map(r_tmp(3 downto 0), leds(6));
+    decoder7: decoder port map(conv_std_logic_vector(c, 4), leds(7));
+
     -- decoder1: decoder port map(r_tmp(3 downto 0), leds(1));
     -- decoder2: decoder port map("000" & r_tmp(4), leds(2));
     -- decoder3: decoder port map(conv_std_logic_vector(c, 4)(3 downto 0), leds(3));
 
-    decoder4: decoder port map("0" & lbtn & mbtn & rbtn, leds(4));
+    -- decoder4: decoder port map("0" & lbtn & mbtn & rbtn, leds(4));
 
     vga_ram_inst : vga_ram PORT MAP (
 		clock	 => clk100M,
@@ -170,51 +177,6 @@ begin
             end if;
         end if;
     end process;
-
-    -- process(lbtn)
-    -- begin
-    --     if lbtn'event and lbtn = '1'then
-    --         mode <= "01";
-    --         board_ctrl <= '1';
-    --     end if;
-    -- end process;
-
-    -- process(lbtn)
-    -- begin
-    --     if lbtn'event and lbtn = '0'then
-    --         board_ctrl <= '0';
-    --     end if;
-    -- end process;
-
-    -- process(rbtn)
-    -- begin
-    --     if rbtn'event and rbtn = '1'then
-    --         mode <= "01";
-    --         board_ctrl <= '1';
-    --     end if;
-    -- end process;
-
-    -- process(rbtn)
-    -- begin
-    --     if rbtn'event and rbtn = '0'then
-    --         board_ctrl <= '0';
-    --     end if;
-    -- end process;
-
-    -- process(mbtn)
-    -- begin
-    --     if mbtn'event and mbtn = '1'then
-    --         mode <= "01";
-    --         board_ctrl <= '1';
-    --     end if;
-    -- end process;
-
-    -- process(mbtn)
-    -- begin
-    --     if mbtn'event and mbtn = '0'then
-    --         board_ctrl <= '0';
-    --     end if;
-    -- end process;
  
     mouse: ps2_mouse port map (
         clk_in => clk100M,
@@ -230,7 +192,6 @@ begin
     );
 
     btc_ins: bit_to_coordinate port map (
-		enabled => '1',
         xin => conv_integer(mx),
         yin => conv_integer(my),
 		cout => c,
