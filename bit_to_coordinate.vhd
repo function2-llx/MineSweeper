@@ -5,7 +5,7 @@ use		ieee.std_logic_arith.all;
 
 entity bit_to_coordinate is
 	port(
-		xin, yin: in integer range 0 to 1600;
+		x, y: in integer range 0 to 1600;
 		cout: out integer range 0 to 17;--17 means illegal column
 		rout: out integer range 0 to 5  --5 means illegal row
 	);
@@ -14,11 +14,8 @@ end bit_to_coordinate;
 architecture bhv of bit_to_coordinate is
 	
 begin
-	process(xin, yin)
-		variable x, y: integer;
+	process(x, y)
 	begin
-		x := yin;
-		y := xin;
 		if (x >= 72 and x < 128 and y >= 216 and y < 280 and (((((y + 72) mod 96)-16)*(((x + 40) mod 56)-28))<=((((y + 72) mod 96)-0)*(((x + 40) mod 56)-0))) and (((y + 72) mod 96)-64)*(((x + 40) mod 56)-55)-(((y + 72) mod 96)-48)*(((x + 40) mod 56)-28)>=0 and (((y + 72) mod 96)-48)*(((x + 40) mod 56)-28)-(((y + 72) mod 96)-64)*(((x + 40) mod 56)-0)>=0 and (((y + 72) mod 96)-0)*(((x + 40) mod 56)-55)-(((y + 72) mod 96)-16)*(((x + 40) mod 56)-28)<=0) then
 			--Line 0
 			cout <= 0;
