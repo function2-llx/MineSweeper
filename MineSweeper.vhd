@@ -82,7 +82,7 @@ architecture bhv of MineSweeper is
     signal lbtn, rbtn, mbtn: std_logic;
     signal mx, my: std_logic_vector(9 downto 0);
     signal error_no_ack: std_logic;
-    signal mouse_rst: std_logic := '0';
+    signal mouse_rst: std_logic := '1';
 
     component bit_to_coordinate is
         port(

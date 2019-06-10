@@ -109,7 +109,7 @@ begin
             elsif mode_in = "01" or mode_in = "10" then
                 mode := mode_in;
                 addr := get_addr(c, r);
-                if lose = '0' and win = '0' and r <= 4 * n - 4 and c < n then
+                if lose = '0' and win = '0' and c <= 4 * n - 4 and r < n then
                     state := 0;
                 else
                     state := 6;
