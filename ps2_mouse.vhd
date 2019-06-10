@@ -76,9 +76,14 @@ signal clk,reset : std_logic;
 signal count : std_logic_vector(20 downto 0);  
 
 signal dx,dy,nx,ny:std_logic_vector(11 downto 0);
+signal prex,prey:std_logic_vector(9 downto 0);
+
+signal bit_throw:std_logic:='0';
+signal rst_auto:std_logic:='1';
+signal rst_cnt:integer:=0;
 
 begin
-reset<= (not reset_in);
+reset<= (not (reset_in and rst_auto));
 ps2_clk <= '0' when ps2_clk_hi_z='0' else 'Z';
 ps2_data <= '0' when ps2_data_hi_z='0' else 'Z';
 
@@ -93,6 +98,24 @@ ps2_data <= '0' when ps2_data_hi_z='0' else 'Z';
 			else
 				clk <= not clk;
 				count<=(others=>'0');
+			end if;
+		end if;
+	end process;
+	
+	process(clk_in)
+	begin
+		if(clk_in'event and clk_in='1')then
+			prex<=mousex;prey<=mousey;
+			if(rst_cnt>=30000000)then
+				rst_auto<='0';
+				rst_cnt<=0;
+			else
+				rst_auto<='1';
+				if(prex=mousex and prey=mousey)then
+					rst_cnt<=rst_cnt+1;
+				else
+					rst_cnt<=0;
+				end if;
 			end if;
 		end if;
 	end process;
@@ -183,6 +206,7 @@ begin
   ps2_data_hi_z <= '1';
   error_no_ack <= '0';
   output_strobe <= '0';
+  --bit_throw<='0';
 
   case m2_state is
     when m2_reset =>    -- after reset, send command to mouse.
@@ -203,7 +227,11 @@ begin
       end if;
 
     when m2_use =>
-      output_strobe <= '1';
+	  if(bit_throw='0')then
+		output_strobe <= '1';
+	  else
+	    bit_throw<='0';
+	  end if;
       m2_next_state <= m2_wait;
 
 --------------------------------------------------------------------------
@@ -262,8 +290,9 @@ begin
     when m2_data_high_3 =>
         ps2_data_hi_z <= '1';  -- allow mouse to pull low (ack pulse)
       if (fall='1' and (ps2_data='1')) then
-        m2_next_state <= m2_error_no_ack;
+	    m2_next_state <= m2_error_no_ack;
       elsif (fall='1' and (ps2_data='0')) then
+	    
         m2_next_state <= m2_await_response;
       else 
         m2_next_state <= m2_data_high_3;
@@ -274,7 +303,9 @@ begin
       m2_next_state <= m2_error_no_ack;
     
     when m2_await_response =>
-      m2_next_state <= m2_use;
+	  --bit_throw<='1';
+      --m2_next_state <= m2_use;
+	  m2_next_state <= m2_wait;
 
     when others => m2_next_state <= m2_wait;
   end case;
