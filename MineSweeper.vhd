@@ -124,6 +124,7 @@ begin
     r_tmp <= conv_std_logic_vector(r, 8);
 
     decoder0: decoder port map(conv_std_logic_vector(remain, 4), leds(0));
+    decoder1: decoder port map("00" & win & lose, leds(1));
     -- decoder0: decoder port map(mx(3 downto 0), leds(0));
     -- decoder1: decoder port map(mx(7 downto 4), leds(1));
     -- decoder2: decoder port map("00" & mx(9 downto 8), leds(2));
