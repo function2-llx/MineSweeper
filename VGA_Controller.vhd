@@ -24,10 +24,12 @@ architecture vga_rom of VGA_Controller is
 
 	component vga640480 is
 		 port(
-				address		:		  out	STD_LOGIC_VECTOR(15 DOWNTO 0);
+				addresshex	:		  out	STD_LOGIC_VECTOR(15 DOWNTO 0);
+				addresswl	:		  out STD_LOGIC_VECTOR(12 DOWNTO 0);
 				reset       :       in  STD_LOGIC;
 				clk25       :		  out std_logic; 
-				q		      :		  in STD_LOGIC_vector(8 downto 0);
+				qhex	      :		  in STD_LOGIC_vector(8 downto 0);
+				qwl	      :		  in STD_LOGIC_vector(8 downto 0);
 				clk_0       :       in  STD_LOGIC; --100M时钟输入
 				hs,vs       :       out STD_LOGIC; --行同步、场同步信号
 				r,g,b       :       out STD_LOGIC_vector(2 downto 0);
@@ -52,18 +54,31 @@ architecture vga_rom of VGA_Controller is
 		);
 	END component;
 	
-	signal address_tmp: std_logic_vector(15 downto 0);
+	component digital_rom_wl IS
+		PORT
+		(
+			address		: IN STD_LOGIC_VECTOR (12 DOWNTO 0);
+			clock		: IN STD_LOGIC ;
+			q		: OUT STD_LOGIC_VECTOR(8 DOWNTO 0)
+		);
+	END component;
+	
+	signal addresshex_tmp: std_logic_vector(15 downto 0);
+	signal addresswl_tmp: std_logic_vector(12 downto 0);
 	signal clk25: std_logic;
-	signal q_tmp: std_logic_vector(8 downto 0);
+	signal qhex_tmp: std_logic_vector(8 downto 0);
+	signal qwl_tmp: std_logic_vector(8 downto 0);
 
 	constant n: integer := 5;
 begin
 
 	u1: vga640480 port map(
-							address=>address_tmp, 
+							addresshex=>addresshex_tmp,
+							addresswl=>addresswl_tmp,
 							reset=>reset, 
 							clk25=>clk25, 
-							q=>q_tmp,
+							qhex=>qhex_tmp,
+							qwl=>qwl_tmp,
 							clk_0=>clk_0, 
 							hs=>hs, vs=>vs, 
 							r=>r, g=>g, b=>b,
@@ -77,10 +92,15 @@ begin
 							mouse_r=>mouse_r,
 							mouse_c=>mouse_c
 						);
-	utest: digital_rom_cut port map(	
-							address=>address_tmp, 
+	uhex: digital_rom_cut port map(	
+							address=>addresshex_tmp, 
 							clock=>clk25, 
-							q=>q_tmp
+							q=>qhex_tmp
+						);
+	uwl: digital_rom_wl port map(	
+							address=>addresswl_tmp, 
+							clock=>clk25, 
+							q=>qwl_tmp
 						);
 
 end vga_rom;

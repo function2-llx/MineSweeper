@@ -5,10 +5,12 @@ use		ieee.std_logic_arith.all;
 
 entity vga640480 is
 	 port(
-			address		:		  out	STD_LOGIC_VECTOR(15 DOWNTO 0);
+			addresshex	:		  out	STD_LOGIC_VECTOR(15 DOWNTO 0);
+			addresswl	:		  out STD_LOGIC_VECTOR(12 DOWNTO 0);
 			reset       :       in  STD_LOGIC;
 			clk25       :		  out std_logic; --25MHz
-			q		      :		  in STD_LOGIC_vector(8 downto 0);--内存返回的数值
+			qhex	      :		  in STD_LOGIC_vector(8 downto 0);--内存返回的数值
+			qwl	      :		  in STD_LOGIC_vector(8 downto 0);--内存返回的数值
 			clk_0       :       in  STD_LOGIC; --100M时钟输入
 			hs,vs       :       out STD_LOGIC; --行同步、场同步信号
 			r,g,b       :       out STD_LOGIC_vector(2 downto 0);
@@ -159,35 +161,35 @@ begin
 			g1	<= "000";
 			b1	<= "000";	
 		elsif(clk'event and clk='1')then
-		  if lose='1' then
-		  if (x < 300 or x >= 340 or y < 220 or y >= 260) then
-				r1 <= "000";
-				g1	<= "000";
-				b1	<= "000";
---			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
---				r1 <= "110";
---				g1	<= "110";
---				b1	<= "110";
-			else
-				r1 <= "111";
-				g1	<= "000";
-				b1	<= "111";
-			end if;
-		  elsif win='1' then
-			if (x < 300 or x >= 340 or y < 220 or y >= 260) then
-				r1 <= "000";
-				g1	<= "000";
-				b1	<= "000";
---			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
---				r1 <= "110";
---				g1	<= "110";
---				b1	<= "110";
-			else
-				r1 <= "000";
-				g1	<= "111";
-				b1	<= "000";
-			end if;
-		  else
+--		  if lose='1' then
+--		  if (x < 300 or x >= 340 or y < 220 or y >= 260) then
+--				r1 <= "000";
+--				g1	<= "000";
+--				b1	<= "000";
+----			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
+----				r1 <= "110";
+----				g1	<= "110";
+----				b1	<= "110";
+--			else
+--				r1 <= "111";
+--				g1	<= "000";
+--				b1	<= "111";
+--			end if;
+--		  elsif win='1' then
+--			if (x < 300 or x >= 340 or y < 220 or y >= 260) then
+--				r1 <= "000";
+--				g1	<= "000";
+--				b1	<= "000";
+----			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
+----				r1 <= "110";
+----				g1	<= "110";
+----				b1	<= "110";
+--			else
+--				r1 <= "000";
+--				g1	<= "111";
+--				b1	<= "000";
+--			end if;
+--		  else
 			x := conv_integer(vector_x);
 			y := conv_integer(vector_y);
 			--y += 16
@@ -456,26 +458,26 @@ begin
 				g1	<= "000";
 				b1	<= "000";
 			elsif cout = 17 then
-				prefix := "1010";
-				address <= prefix & vectors_y(5 downto 0) & vectors_x(5 downto 0);--64 * 64
-				r1 <= q(8 downto 6);
-				g1 <= q(5 downto 3);
-				b1 <= q(2 downto 0);
+				prefix := "1001";
+				addresshex <= prefix & vectors_y(5 downto 0) & vectors_x(5 downto 0);--64 * 64
+				r1 <= qhex(8 downto 6);
+				g1 <= qhex(5 downto 3);
+				b1 <= qhex(2 downto 0);
 			elsif cout = 18 then
-				prefix := conv_std_logic_vector(6 + tens, 4); -- 6 is 0110
-				address <= "1" & prefix & vectors_y(5 downto 0) & vectors_x(4 downto 0);--32 * 64
-				r1 <= q(8 downto 6);
-				g1 <= q(5 downto 3);
-				b1 <= q(2 downto 0);
+				prefix := conv_std_logic_vector(4 + tens, 4); -- 4 is 0100
+				addresshex <= "1" & prefix & vectors_y(5 downto 0) & vectors_x(4 downto 0);--32 * 64
+				r1 <= qhex(8 downto 6);
+				g1 <= qhex(5 downto 3);
+				b1 <= qhex(2 downto 0);
 --				r1 <= "000";
 --				g1	<= "011";
 --				b1	<= "111";
 			elsif cout = 19 then
-				prefix := conv_std_logic_vector(6 + ones, 4); -- 6 is 0110
-				address <= "1" & prefix & vectors_y(5 downto 0) & vectors_x(4 downto 0);--32 * 64
-				r1 <= q(8 downto 6);
-				g1 <= q(5 downto 3);
-				b1 <= q(2 downto 0);
+				prefix := conv_std_logic_vector(4 + ones, 4); -- 4 is 0100
+				addresshex <= "1" & prefix & vectors_y(5 downto 0) & vectors_x(4 downto 0);--32 * 64
+				r1 <= qhex(8 downto 6);
+				g1 <= qhex(5 downto 3);
+				b1 <= qhex(2 downto 0);
 --				r1 <= "011";
 --				g1	<= "000";
 --				b1	<= "111";
@@ -489,23 +491,38 @@ begin
 				else
 					prefix := "0000";
 				end if;
-				address <= prefix & vectors_y(5 downto 0) & vectors_x(5 downto 0);--64 * 64
+				addresshex <= prefix & vectors_y(5 downto 0) & vectors_x(5 downto 0);--64 * 64
 				if (mouse_r = rout and mouse_c = cout) then
-					r1 <= q(8 downto 6) + 2;
-					g1 <= q(5 downto 3) + 2;
-					b1 <= q(2 downto 0) + 2;
+					r1 <= qhex(8 downto 6) + 2;
+					g1 <= qhex(5 downto 3) + 2;
+					b1 <= qhex(2 downto 0) + 2;
 				else
-					r1 <= q(8 downto 6);
-					g1 <= q(5 downto 3);
-					b1 <= q(2 downto 0);
+					r1 <= qhex(8 downto 6);
+					g1 <= qhex(5 downto 3);
+					b1 <= qhex(2 downto 0);
 				end if;
+			end if;
+			if win = '1' and x >= 288 and x < 352 and y >= 208 and y < 272 then
+				vectors_y := conv_std_logic_vector(y - 208, 6);
+				vectors_x := conv_std_logic_vector(x - 288, 6);
+				addresswl <= "0" & vectors_y(5 downto 0) & vectors_x(5 downto 0);--64 * 64
+				r1 <= qwl(8 downto 6);
+				g1 <= qwl(5 downto 3);
+				b1 <= qwl(2 downto 0);
+			elsif lose = '1' and x >= 288 and x < 352 and y >= 208 and y < 272 then
+				vectors_y := conv_std_logic_vector(y - 208, 6);
+				vectors_x := conv_std_logic_vector(x - 288, 6);
+				addresswl <= "1" & vectors_y(5 downto 0) & vectors_x(5 downto 0);--64 * 64
+				r1 <= qwl(8 downto 6);
+				g1 <= qwl(5 downto 3);
+				b1 <= qwl(2 downto 0);
 			end if;
 			if (vector_x + 1 >= mouse_x and vector_x <= mouse_x + 1 and vector_y + 4 >= mouse_y and vector_y <= mouse_y + 4) or (vector_y  + 1 >= mouse_y and vector_y <= mouse_y + 1 and vector_x + 4 >= mouse_x and vector_x <= mouse_x + 4) then
 				r1 <= "000";
 				g1 <= "111";
 				b1 <= "000";
 			end if;
-		  end if;
+--		  end if;
 		end if;	 
 	    end process;	
 
