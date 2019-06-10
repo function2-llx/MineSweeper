@@ -462,7 +462,7 @@ begin
 				g1 <= q(5 downto 3);
 				b1 <= q(2 downto 0);
 			elsif cout = 18 then
-				prefix := conv_std_logic_vector(4 + tens, 4); -- 4 is 0100
+				prefix := conv_std_logic_vector(6 + tens, 4); -- 6 is 0110
 				address <= "1" & prefix & vectors_y(5 downto 0) & vectors_x(4 downto 0);--32 * 64
 				r1 <= q(8 downto 6);
 				g1 <= q(5 downto 3);
@@ -471,7 +471,7 @@ begin
 --				g1	<= "011";
 --				b1	<= "111";
 			elsif cout = 19 then
-				prefix := conv_std_logic_vector(4 + ones, 4); -- 4 is 0100
+				prefix := conv_std_logic_vector(6 + ones, 4); -- 6 is 0110
 				address <= "1" & prefix & vectors_y(5 downto 0) & vectors_x(4 downto 0);--32 * 64
 				r1 <= q(8 downto 6);
 				g1 <= q(5 downto 3);
