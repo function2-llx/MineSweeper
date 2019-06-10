@@ -89,7 +89,7 @@ def test_neighbor():
         for neighbor in get_neighbor(i):
             assert i in get_neighbor(neighbor)
 
-lei_num = 15
+lei_num = 10
 
 lei = [1] * lei_num + [0] * (tot - lei_num)
 shuffle(lei)

@@ -158,20 +158,46 @@ begin
     );
 
     process(lbtn, rbtn, mbtn, clk100M)
+        variable state: integer range 0 to 2;
     begin
         if clk100M'event and clk100M = '1' then
-            if lbtn = '1' then
-                mode <= "01";
-                board_ctrl <= '1';
-            elsif rbtn = '1' then
-                mode <= "10";
-                board_ctrl <= '1';
-            elsif mbtn = '1' then
-                mode <= "00";
-                board_ctrl <= '1';
+            if lbtn = '1' or mbtn = '1' or rbtn = '1' then
+                case state is
+                    when 0 =>
+                        if lbtn = '1' then
+                            mode <= "01";
+                        elsif mbtn = '1' then
+                            mode <= "00";
+                        else
+                            mode <= "10";
+                        end if;
+
+                        state := 1;
+                        
+                    when 1 =>
+                        board_ctrl <= '1';
+                        state := 2;
+                    
+                    when 2 => null;
+                end case;
             else
+                state := 0;
                 board_ctrl <= '0';
             end if;
+            -- if lbtn = '1' then
+
+            --     mode <= "01";
+            --     board_ctrl <= '1';
+            -- elsif rbtn = '1' then
+            --     mode <= "10";
+            --     board_ctrl <= '1';
+            -- elsif mbtn = '1' then
+            --     mode <= "00";
+            --     board_ctrl <= '1';
+            -- else
+            --     board_ctrl <= '0';
+            --     -- mode <= "11";
+            -- end if;
         end if;
     end process;
  
@@ -243,6 +269,4 @@ begin
             end if;
         end if;
     end process;
-
-
 end architecture;
