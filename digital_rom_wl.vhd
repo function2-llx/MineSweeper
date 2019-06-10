@@ -42,7 +42,7 @@ USE altera_mf.all;
 ENTITY digital_rom_wl IS
 	PORT
 	(
-		address		: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
+		address		: IN STD_LOGIC_VECTOR (12 DOWNTO 0);
 		clock		: IN STD_LOGIC ;
 		q		: OUT STD_LOGIC_VECTOR(8 DOWNTO 0)
 	);
@@ -73,7 +73,7 @@ ARCHITECTURE SYN OF digital_rom_wl IS
 	);
 	PORT (
 			clock0	: IN STD_LOGIC ;
-			address_a	: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
+			address_a	: IN STD_LOGIC_VECTOR (12 DOWNTO 0);
 			q_a	: OUT STD_LOGIC_VECTOR(8 DOWNTO 0)
 	);
 	END COMPONENT;
