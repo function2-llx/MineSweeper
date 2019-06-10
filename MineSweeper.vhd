@@ -26,7 +26,7 @@ architecture bhv of MineSweeper is
             mode_in: in std_logic_vector(0 to 1);  -- 01：左击；10：右击；11：初始化
             r, c: in integer range 0 to 31;
             lose, win: buffer std_logic;
-            remain: buffer integer range 0 to 300; --  剩余雷数
+            remain: out integer; --  剩余雷数
     
             vga_wren: out std_logic;
             vga_wraddr: out std_logic_vector(7 downto 0);
@@ -38,7 +38,7 @@ architecture bhv of MineSweeper is
     signal mode: std_logic_vector(0 to 1) := "00";
     signal r, c: integer range 0 to 31;
     signal lose, win: std_logic;
-    signal remain: integer range 0 to 300;
+    signal remain: integer;
 
     component decoder is
         port (
@@ -103,11 +103,11 @@ architecture bhv of MineSweeper is
             data: in std_logic_vector(3 downto 0);
             mouse_x: in std_logic_vector(9 downto 0);--鼠标x坐标
             mouse_y: in std_logic_vector(8 downto 0);--鼠标y坐标
-				remain: in integer;  -- 剩余雷数
-				win: in std_logic;-- 胜利
-				lose: in std_logic;-- 失败
-				mouse_r: in integer;
-				mouse_c: in integer
+            remain: in integer;  -- 剩余雷数
+            win: in std_logic;-- 胜利
+            lose: in std_logic;-- 失败
+            mouse_r: in integer;
+            mouse_c: in integer
         );
     end component;
 begin
@@ -123,15 +123,16 @@ begin
 
     r_tmp <= conv_std_logic_vector(r, 8);
 
-    decoder0: decoder port map(mx(3 downto 0), leds(0));
-    decoder1: decoder port map(mx(7 downto 4), leds(1));
-    decoder2: decoder port map("00" & mx(9 downto 8), leds(2));
-    decoder3: decoder port map(my(3 downto 0), leds(3));
-    decoder4: decoder port map(my(7 downto 4), leds(4));
-    decoder5: decoder port map("00" & my(9 downto 8), leds(5));
+    decoder0: decoder port map(conv_std_logic_vector(remain, 4), leds(0));
+    -- decoder0: decoder port map(mx(3 downto 0), leds(0));
+    -- decoder1: decoder port map(mx(7 downto 4), leds(1));
+    -- decoder2: decoder port map("00" & mx(9 downto 8), leds(2));
+    -- decoder3: decoder port map(my(3 downto 0), leds(3));
+    -- decoder4: decoder port map(my(7 downto 4), leds(4));
+    -- decoder5: decoder port map("00" & my(9 downto 8), leds(5));
 
-    decoder6: decoder port map(r_tmp(3 downto 0), leds(6));
-    decoder7: decoder port map(conv_std_logic_vector(c, 4), leds(7));
+    -- decoder6: decoder port map(r_tmp(3 downto 0), leds(6));
+    -- decoder7: decoder port map(conv_std_logic_vector(c, 4), leds(7));
 
     vga_ram_inst : vga_ram PORT MAP (
 		clock	 => clk100M,
@@ -206,11 +207,11 @@ begin
         data => vga_out,
         mouse_x => mx,
         mouse_y => my(8 downto 0),
-		  remain => remain,
-		  win => win,
-		  lose => lose,
-		  mouse_r => r,
-		  mouse_c => c
+        remain => remain,
+        win => win,
+        lose => lose,
+        mouse_r => r,
+        mouse_c => c
     );
 
 
@@ -236,7 +237,7 @@ begin
         if clk100M'event and clk100M = '1' then
             cnt := cnt + 1;
             if cnt <= 100 then
-                mouse_rst <= '0';
+                mouse_rst <= '1';
             else
                 mouse_rst <= '1';
             end if;

@@ -10,7 +10,7 @@ entity board is
         mode_in: in std_logic_vector(0 to 1);  -- 01：左击；10：右击；11：初始化
         r, c: in integer range 0 to 31;
         lose, win: buffer std_logic;
-        remain: buffer integer range 0 to 300; --  剩余雷数
+        remain: out integer;
 
         vga_wren: out std_logic := '0';
         vga_wraddr: out std_logic_vector(7 downto 0);
@@ -64,22 +64,7 @@ architecture bhv of board is
         return conv_std_logic_vector((n + 1) * n / 2 + (n - 1) * (2 * n - 1) + (c - 3 * n + 2) * (5 * n - c - 3) / 2 + r, 8);
     end function;
 
-    -- function legal(c: integer; r: integer) return std_logic_vector is
-    -- begin
-    --     if c <= n - 1 then
-    --         return conv_std_logic_vector(c * (c + 1) / 2 + r, 8);
-    --     end if;
-
-    --     if c <= 3 * n - 3 then
-    --         if (c - n) mod 2 = 0 then
-    --             return conv_std_logic_vector(n * (n + 1) / 2 + (2 * n - 1) * ((c - n) / 2) + r, 8);
-    --         else
-    --             return conv_std_logic_vector(n * (n + 1) / 2 + (2 * n - 1) * ((c - n) / 2) + n - 1 + r, 8);
-    --         end if;
-    --     end if;
-
-    --     return conv_std_logic_vector((n + 1) * n / 2 + (n - 1) * (2 * n - 1) + (c - 3 * n + 2) * (5 * n - c - 3) / 2 + r, 8);
-    -- end function;
+    signal remain_sig: integer;
 
     signal clk50M, clk25M: std_logic;
 begin
@@ -97,6 +82,8 @@ begin
 		wren	 => board_wren,
 		q	 => board_out
     );
+
+    remain <= remain_sig;
     
     process(rst, clk25M)
         variable addr: std_logic_vector(7 downto 0);
@@ -114,8 +101,8 @@ begin
             if mode_in = "00"then
                 state := 0;
                 oper := tot;
+                remain_sig <= 0;
                 addr := (others => '0');
-                win <= '0';
                 lose <= '0';
                 win <= '0';
                 mode := mode_in;
@@ -145,7 +132,7 @@ begin
                     state := 1;
                 when 1 =>
                     if grid_data(3) = '1' then
-                        remain <= remain + 1;
+                        remain_sig <= remain_sig + 1;
                     end if;
 
                     board_wren <= '0';
@@ -191,12 +178,12 @@ begin
 
                             state := 2;
                         else 
-                            state := 3;
+                            state := 6;
                         end if;
                     else    --  右击
                         if info = "10" then
                             info(1) := '0';
-                            remain <= remain + 1;
+                            remain_sig <= remain_sig + 1;
                             oper := oper + 1;
 
                             vga_in <= unknown_state;
@@ -204,9 +191,11 @@ begin
 
                             board_in <= "00";
                             board_wren <= '1';
+
+                            state := 2;
                         elsif info = "00" then
                             info(1) := '1';
-                            remain <= remain - 1;
+                            remain_sig <= remain_sig - 1;
                             oper := oper - 1;
 
                             vga_in <= flag_state;
@@ -214,22 +203,23 @@ begin
 
                             board_in <= info;
                             board_wren <= '1';
+
+                            state := 2;
                         else
-                            state := 3;
+                            state := 6;
                         end if;
                     end if;
 
-                    state := 2;
                 when 2 =>
                     vga_wren <= '0';
                     board_wren <= '0';
-                    if lose = '0' and remain = 0 and oper = 0 then
+                    if lose = '0' and remain_sig = 0 and oper = 0 then
                         win <= '1';
                     end if;
 
                     if lose = '1' then 
-                        state := 3;
                         addr := (others => '0');
+                        state := 3;
                     else 
                         state := 6;
                     end if;
@@ -242,14 +232,12 @@ begin
                 when 4 =>
                     if grid_data(3) = '1' then
                         vga_in <= dead_state;
-                    -- else
-                    --     vga_in <= "0" & grid_data(2 downto 0);
                         vga_wren <= '1';
                     end if;
 
                     state := 5;
                 
-                when 5=>
+                when 5 =>
                     vga_wren <= '0';
                     addr := addr + '1';
                     if addr = conv_std_logic_vector(tot, 8) then 
