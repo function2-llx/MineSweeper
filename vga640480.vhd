@@ -162,12 +162,12 @@ begin
 		  if lose='1' then
 			if (x >= 300 and x < 340 and y >= 220 and y < 260) then
 				r1 <= "111";
-				g1	<= "111";
+				g1	<= "000";
 				b1	<= "111";
-			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
-				r1 <= "110";
-				g1	<= "110";
-				b1	<= "110";
+--			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
+--				r1 <= "110";
+--				g1	<= "110";
+--				b1	<= "110";
 			else
 				r1 <= "000";
 				g1	<= "000";
@@ -176,12 +176,12 @@ begin
 		  elsif win='1' then
 			if (x >= 300 and x < 340 and y >= 220 and y < 260) then
 				r1 <= "000";
-				g1	<= "000";
+				g1	<= "111";
 				b1	<= "000";
-			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
-				r1 <= "110";
-				g1	<= "110";
-				b1	<= "110";
+--			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
+--				r1 <= "110";
+--				g1	<= "110";
+--				b1	<= "110";
 			else
 				r1 <= "000";
 				g1	<= "000";
@@ -500,7 +500,7 @@ begin
 					b1 <= q(2 downto 0);
 				end if;
 			end if;
-			if (vector_x + 2 >= mouse_x and vector_x <= mouse_x + 2 and vector_y + 4 >= mouse_y and vector_y <= mouse_y + 4) or (vector_y  + 2 <= mouse_y and vector_y >= mouse_y + 2 and vector_x + 4 >= mouse_x and vector_x <= mouse_x + 4) then
+			if (vector_x + 1 >= mouse_x and vector_x <= mouse_x + 1 and vector_y + 4 >= mouse_y and vector_y <= mouse_y + 4) or (vector_y  + 1 >= mouse_y and vector_y <= mouse_y + 1 and vector_x + 4 >= mouse_x and vector_x <= mouse_x + 4) then
 				r1 <= "000";
 				g1 <= "111";
 				b1 <= "000";
