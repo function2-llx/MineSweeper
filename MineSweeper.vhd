@@ -241,9 +241,7 @@ begin
         mouse_c => c
     );
 
-
     process(clk100M)
-        variable cnt: std_logic_vector(0 to 20);
     begin
         if clk100M'event and clk100M = '1' then
             clk50M <= not clk50M;
@@ -254,20 +252,6 @@ begin
     begin
         if clk50M'event and clk50M = '1' then
             clk25M <= not clk25M;
-        end if;
-    end process;
-
-    process(clk100M)
-        constant cnt_lim: integer := 20 * 1000000;
-        variable cnt: integer range 0 to cnt_lim;
-    begin
-        if clk100M'event and clk100M = '1' then
-            cnt := cnt + 1;
-            if cnt <= 100 then
-                mouse_rst <= '1';
-            else
-                mouse_rst <= '1';
-            end if;
         end if;
     end process;
 end architecture;
