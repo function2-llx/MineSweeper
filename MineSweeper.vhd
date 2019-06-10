@@ -96,13 +96,17 @@ architecture bhv of MineSweeper is
     component VGA_Controller is
         port(
             clk_0,reset: in std_logic;
-            clicker: in std_logic;--新增测试按键
             hs,vs: out STD_LOGIC; 
             r,g,b: out STD_LOGIC_vector(2 downto 0);
             addr: out std_logic_vector(7 downto 0);
             data: in std_logic_vector(3 downto 0);
             mouse_x: in std_logic_vector(9 downto 0);--鼠标x坐标
-            mouse_y: in std_logic_vector(8 downto 0) --鼠标y坐标
+            mouse_y: in std_logic_vector(8 downto 0);--鼠标y坐标
+				remain: in integer;  -- 剩余雷数
+				win: in std_logic;-- 胜利
+				lose: in std_logic;-- 失败
+				mouse_r: in integer;
+				mouse_c: in integer
         );
     end component;
 begin
@@ -201,7 +205,6 @@ begin
     vga_ins: VGA_Controller port map (
         clk_0 => clk100M,
         reset => rst,
-        clicker => '1',
         hs => hs,
         vs => vs,
         r => vga_r,
@@ -210,7 +213,12 @@ begin
         addr => vga_rdaddr,
         data => vga_out,
         mouse_x => mx,
-        mouse_y => my(8 downto 0)
+        mouse_y => my(8 downto 0),
+		  remain => remain,
+		  win => win,
+		  lose => lose,
+		  mouse_r => r,
+		  mouse_c => c
     );
 
 
