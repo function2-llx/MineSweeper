@@ -7,6 +7,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 
 entity ps2_mouse is
   port( clk_in : in std_logic;
@@ -24,8 +25,8 @@ end ps2_mouse;
 
 architecture behavioral of ps2_mouse is
 
-constant x_max:  integer:=800;
-constant y_max:  integer:=600;
+constant x_max:  std_logic_vector(10 downto 0):="01010000000";
+constant y_max:  std_logic_vector(10 downto 0):="00111100000";
 
 
 constant total_bits     : integer:=33; -- number of bits in one full packet
@@ -73,6 +74,8 @@ signal output_strobe : std_logic;    -- latches data into the output registers(�
 signal packet_good : std_logic;      -- check whether the data is valid 
 signal clk,reset : std_logic;  
 signal count : std_logic_vector(20 downto 0);  
+
+signal dx,dy,nx,ny:std_logic_vector(11 downto 0);
 
 begin
 reset<= (not reset_in);
@@ -345,6 +348,8 @@ begin
   end if;               
 end process;
 
+dx<=q(5)&q(5)&q(5)&q(5)&q(19 downto 12)+512;
+nx<=("00"&mousex)+dx;
 x: process (reset, clk)  --处理X坐标
 begin
   if (reset='1') then
@@ -352,15 +357,24 @@ begin
     mousex <= mousex;
   elsif (clk'event and clk='1') then
     if (output_strobe='1') then
-      if ((mousex >= x_max and q(5)='0') or (mousex <= 1 and q(5)='1')) then
-        mousex <= mousex;
-      else
-        mousex <= mousex + (q(5) & q(5) & q(19 downto 12));
-      end if;
+--      if ((mousex >= x_max and q(5)='0') or (mousex <= 1 and q(5)='1')) then
+--        mousex <= mousex;
+--      else
+--        mousex <= mousex + (q(5) & q(5) & q(19 downto 12));
+--      end if;
+		if(nx<512)then
+			mousex<=(others=>'0');
+		elsif(nx>=x_max+512)then
+			mousex<=x_max(9 downto 0)-1;
+		else
+			mousex<=nx(9 downto 0)-512;
+		end if;
     end if;
   end if;
 end process;
 
+dy<=512-(q(6)&q(6)&q(6)&q(6)&q(30 downto 23));
+ny<=("00"&mousey)+dy;
 y: process (reset, clk) --处理Y坐标
 begin
   if (reset='1') then
@@ -368,11 +382,18 @@ begin
     mousey <= mousey;
   elsif (clk'event and clk='1') then
     if (output_strobe='1') then
-      if ((mousey >= y_max and q(6)='1') or (mousey <= 1 and q(6)='0')) then
-        mousey <= mousey;
-      else
-        mousey <= mousey + (not (q(6) & q(6) & q(30 downto 23)) + "1");
-      end if;
+--      if ((mousey >= y_max and q(6)='1') or (mousey <= 1 and q(6)='0')) then
+--        mousey <= mousey;
+--      else
+--        mousey <= mousey + (not (q(6) & q(6) & q(30 downto 23)) + "1");
+--      end if;
+		if(ny<512)then
+			mousey<=(others=>'0');
+		elsif(ny>=y_max+512)then
+			mousey<=y_max(9 downto 0)-1;
+		else
+			mousey<=ny(9 downto 0)-512;
+		end if;
     end if;
   end if;
 end process;
