@@ -160,23 +160,23 @@ begin
 			b1	<= "000";	
 		elsif(clk'event and clk='1')then
 		  if lose='1' then
-			if (x >= 300 and x < 340 and y >= 220 and y < 260) then
+		  if (x < 300 or x >= 340 or y < 220 or y >= 260) then
+				r1 <= "000";
+				g1	<= "000";
+				b1	<= "000";
+--			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
+--				r1 <= "110";
+--				g1	<= "110";
+--				b1	<= "110";
+			else
 				r1 <= "111";
 				g1	<= "000";
 				b1	<= "111";
---			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
---				r1 <= "110";
---				g1	<= "110";
---				b1	<= "110";
-			else
-				r1 <= "000";
-				g1	<= "000";
-				b1	<= "000";
 			end if;
 		  elsif win='1' then
-			if (x >= 300 and x < 340 and y >= 220 and y < 260) then
+			if (x < 300 or x >= 340 or y < 220 or y >= 260) then
 				r1 <= "000";
-				g1	<= "111";
+				g1	<= "000";
 				b1	<= "000";
 --			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
 --				r1 <= "110";
@@ -184,7 +184,7 @@ begin
 --				b1	<= "110";
 			else
 				r1 <= "000";
-				g1	<= "000";
+				g1	<= "111";
 				b1	<= "000";
 			end if;
 		  else
