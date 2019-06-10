@@ -101,7 +101,7 @@ begin
     process(rst, clk25M)
         variable addr: std_logic_vector(7 downto 0);
         variable mode: std_logic_vector(0 to 1);
-        variable state: integer range 0 to 3;
+        variable state: integer range 0 to 6;
         variable info: std_logic_vector(1 downto 0);
         variable oper: integer range 0 to tot;
 
@@ -111,17 +111,23 @@ begin
 
     begin
         if rst = '1' then
-            state := 0;
-            oper := tot;
-            
-            if mode_in = "00" then
-                mode := mode_in;
+            if mode_in = "00"then
+                state := 0;
+                oper := tot;
                 addr := (others => '0');
+                win <= '0';
+                lose <= '0';
+                win <= '0';
+                mode := mode_in;
             elsif mode_in = "01" or mode_in = "10" then
                 mode := mode_in;
                 addr := get_addr(c, r);
+                if lose = '0' and win = '0' then
+                    state := 0;
+                else
+                    state := 6;
+                end if;
             end if;
-
         elsif clk25M'event and clk25M = '1' then
             if mode = "00" then --  初始化
                 case state is
@@ -152,7 +158,7 @@ begin
                         state := 0;
                     end if;
                 
-                when 2 | 3 => null;
+                when 2 to 6 => null;
                     
                 end case;
             elsif mode = "01" or mode = "10" then   --  游戏中
@@ -167,11 +173,9 @@ begin
 
                 when 1 =>
                     info := board_out;
-                    oper := oper - 1;
 
                     if mode = "01" then --  左击
                         if info = "00" then
-                            -- info(0) := '1';
                             if grid_data(3) = '1' then
                                 lose <= '1';
                                 vga_in <= dead_state;   -- 翻开了雷
@@ -183,6 +187,7 @@ begin
 
                             board_in <= "01";
                             board_wren <= '1';
+                            oper := oper - 1;
 
                             state := 2;
                         else 
@@ -192,6 +197,7 @@ begin
                         if info = "10" then
                             info(1) := '0';
                             remain <= remain + 1;
+                            oper := oper + 1;
 
                             vga_in <= unknown_state;
                             vga_wren <= '1';
@@ -201,6 +207,7 @@ begin
                         elsif info = "00" then
                             info(1) := '1';
                             remain <= remain - 1;
+                            oper := oper - 1;
 
                             vga_in <= flag_state;
                             vga_wren <= '1';
@@ -220,9 +227,38 @@ begin
                         win <= '1';
                     end if;
 
-                    state := 3;
+                    if lose = '1' then 
+                        state := 3;
+                        addr := (others => '0');
+                    else 
+                        state := 6;
+                    end if;
+
+                when 3 => 
+                    grid_addr <= addr;
+                    vga_wraddr <= addr;
+                    state := 4;
+
+                when 4 =>
+                    if grid_data(3) = '1' then
+                        vga_in <= dead_state;
+                    -- else
+                    --     vga_in <= "0" & grid_data(2 downto 0);
+                        vga_wren <= '1';
+                    end if;
+
+                    state := 5;
                 
-                when 3 => null;
+                when 5=>
+                    vga_wren <= '0';
+                    addr := addr + '1';
+                    if addr = conv_std_logic_vector(tot, 8) then 
+                        state := 6;
+                    else
+                        state := 3;
+                    end if;
+                
+                when 6 => null;
 
                 end case;
             end if;

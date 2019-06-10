@@ -82,6 +82,7 @@ architecture bhv of MineSweeper is
     signal lbtn, rbtn, mbtn: std_logic;
     signal mx, my: std_logic_vector(9 downto 0);
     signal error_no_ack: std_logic;
+    signal mouse_rst: std_logic := '0';
 
     component bit_to_coordinate is
         port(
@@ -116,9 +117,6 @@ begin
     led_raw(42 to 48) <= leds(6);
     led_raw(49 to 55) <= leds(7);
 
-
-    -- decoder0: decoder port map("1010", leds(0));
-
     r_tmp <= conv_std_logic_vector(r, 8);
 
     decoder0: decoder port map(mx(3 downto 0), leds(0));
@@ -130,12 +128,6 @@ begin
 
     decoder6: decoder port map(r_tmp(3 downto 0), leds(6));
     decoder7: decoder port map(conv_std_logic_vector(c, 4), leds(7));
-
-    -- decoder1: decoder port map(r_tmp(3 downto 0), leds(1));
-    -- decoder2: decoder port map("000" & r_tmp(4), leds(2));
-    -- decoder3: decoder port map(conv_std_logic_vector(c, 4)(3 downto 0), leds(3));
-
-    -- decoder4: decoder port map("0" & lbtn & mbtn & rbtn, leds(4));
 
     vga_ram_inst : vga_ram PORT MAP (
 		clock	 => clk100M,
@@ -180,7 +172,7 @@ begin
  
     mouse: ps2_mouse port map (
         clk_in => clk100M,
-        reset_in => clk,    --  用于鼠标死了的情况
+        reset_in => clk and mouse_rst,    --  用于鼠标死了的情况
         ps2_clk => ps2_clk,
         ps2_data => ps2_data,
         left_button => lbtn,
@@ -226,6 +218,20 @@ begin
     begin
         if clk50M'event and clk50M = '1' then
             clk25M <= not clk25M;
+        end if;
+    end process;
+
+    process(clk100M)
+        constant cnt_lim: integer := 20 * 1000000;
+        variable cnt: integer range 0 to cnt_lim;
+    begin
+        if clk100M'event and clk100M = '1' then
+            cnt := cnt + 1;
+            if cnt <= 100 then
+                mouse_rst <= '0';
+            else
+                mouse_rst <= '1';
+            end if;
         end if;
     end process;
 

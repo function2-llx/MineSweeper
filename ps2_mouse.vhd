@@ -73,10 +73,9 @@ signal output_strobe : std_logic;    -- latches data into the output registers(�
 signal packet_good : std_logic;      -- check whether the data is valid 
 signal clk,reset : std_logic;  
 signal count : std_logic_vector(20 downto 0);  
-signal rst_auto: std_logic := '0';
 
 begin
-reset<= (not reset_in) or rst_auto;
+reset<= (not reset_in);
 ps2_clk <= '0' when ps2_clk_hi_z='0' else 'Z';
 ps2_data <= '0' when ps2_data_hi_z='0' else 'Z';
 
@@ -184,7 +183,6 @@ begin
 
   case m2_state is
     when m2_reset =>    -- after reset, send command to mouse.
-      rst_auto <= '0';
       m2_next_state <= m2_hold_clk_l;
 
     when m2_wait =>
@@ -269,14 +267,8 @@ begin
       end if;
 -------------------------------------------------------------------------
     when m2_error_no_ack =>
-      -- if rst_auto = '0' then
-        error_no_ack <= '0';
-        rst_auto <= '1';
-        -- m2_next_state <= m2_error_no_ack;
-      -- else
-      -- rst_auto <= '0';
-      --   m2_next_state <= m2_reset;
-      -- end if;
+      error_no_ack <= '1';
+      m2_next_state <= m2_error_no_ack;
     
     when m2_await_response =>
       m2_next_state <= m2_use;
@@ -356,7 +348,8 @@ end process;
 x: process (reset, clk)  --处理X坐标
 begin
   if (reset='1') then
- 	mousex <= CONV_STD_LOGIC_VECTOR(x_max/2,10);  -- 400
+   -- mousex <= CONV_STD_LOGIC_VECTOR(x_max/2,10);  -- 400
+    mousex <= mousex;
   elsif (clk'event and clk='1') then
     if (output_strobe='1') then
       if ((mousex >= x_max and q(5)='0') or (mousex <= 1 and q(5)='1')) then
@@ -371,7 +364,8 @@ end process;
 y: process (reset, clk) --处理Y坐标
 begin
   if (reset='1') then
-	 mousey <= CONV_STD_LOGIC_VECTOR(y_max/2,10);  -- 300
+  --  mousey <= CONV_STD_LOGIC_VECTOR(y_max/2,10);  -- 300
+    mousey <= mousey;
   elsif (clk'event and clk='1') then
     if (output_strobe='1') then
       if ((mousey >= y_max and q(6)='1') or (mousey <= 1 and q(6)='0')) then

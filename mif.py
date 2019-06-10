@@ -1,4 +1,4 @@
-from random import randint
+from random import randint, shuffle
 
 n = 5
 tot = 3 * n ** 2 - 3 * n + 1
@@ -89,7 +89,11 @@ def test_neighbor():
         for neighbor in get_neighbor(i):
             assert i in get_neighbor(neighbor)
 
-lei = [1 if randint(0, 2) == 0 else 0 for i in range(tot)]
+lei_num = 15
+
+lei = [1] * lei_num + [0] * (tot - lei_num)
+shuffle(lei)
+print(lei)
 
 if __name__ == "__main__":
     test_id()
