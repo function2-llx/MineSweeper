@@ -401,7 +401,7 @@ begin
 				vectors_y := conv_std_logic_vector((y + 72) mod 96, 6);
 				vectors_x := conv_std_logic_vector((x + 40) mod 56, 6);
 				--line 16: y [8 + 96 * 2, 8 + 64 * 7 - 96 * 2), x [16 + 1 * 56, 16 + 2 * 56) || [16 + 9 * 56, 16 + 10 * 56)
-			elsif (x > 502 and x < 566 and y >= 16 and y < 80) then
+			elsif (x >= 502 and x < 566 and y >= 16 and y < 80) then
 				cout := 17;
 				vectors_y := conv_std_logic_vector(y - 16, 6);
 				vectors_x := conv_std_logic_vector(x - 502, 6);
