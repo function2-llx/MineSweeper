@@ -82,7 +82,7 @@ architecture bhv of MineSweeper is
     signal lbtn, rbtn, mbtn: std_logic;
     signal mx, my: std_logic_vector(9 downto 0);
     signal error_no_ack: std_logic;
-    signal mouse_rst: std_logic := '0';
+    signal mouse_rst: std_logic := '1';
 
     component bit_to_coordinate is
         port(
@@ -124,6 +124,7 @@ begin
     r_tmp <= conv_std_logic_vector(r, 8);
 
     decoder0: decoder port map(conv_std_logic_vector(remain, 4), leds(0));
+    decoder1: decoder port map("00" & win & lose, leds(1));
     -- decoder0: decoder port map(mx(3 downto 0), leds(0));
     -- decoder1: decoder port map(mx(7 downto 4), leds(1));
     -- decoder2: decoder port map("00" & mx(9 downto 8), leds(2));
@@ -158,20 +159,46 @@ begin
     );
 
     process(lbtn, rbtn, mbtn, clk100M)
+        variable state: integer range 0 to 2;
     begin
         if clk100M'event and clk100M = '1' then
-            if lbtn = '1' then
-                mode <= "01";
-                board_ctrl <= '1';
-            elsif rbtn = '1' then
-                mode <= "10";
-                board_ctrl <= '1';
-            elsif mbtn = '1' then
-                mode <= "00";
-                board_ctrl <= '1';
+            if lbtn = '1' or mbtn = '1' or rbtn = '1' then
+                case state is
+                    when 0 =>
+                        if lbtn = '1' then
+                            mode <= "01";
+                        elsif mbtn = '1' then
+                            mode <= "00";
+                        else
+                            mode <= "10";
+                        end if;
+
+                        state := 1;
+                        
+                    when 1 =>
+                        board_ctrl <= '1';
+                        state := 2;
+                    
+                    when 2 => null;
+                end case;
             else
+                state := 0;
                 board_ctrl <= '0';
             end if;
+            -- if lbtn = '1' then
+
+            --     mode <= "01";
+            --     board_ctrl <= '1';
+            -- elsif rbtn = '1' then
+            --     mode <= "10";
+            --     board_ctrl <= '1';
+            -- elsif mbtn = '1' then
+            --     mode <= "00";
+            --     board_ctrl <= '1';
+            -- else
+            --     board_ctrl <= '0';
+            --     -- mode <= "11";
+            -- end if;
         end if;
     end process;
  
@@ -214,9 +241,7 @@ begin
         mouse_c => c
     );
 
-
     process(clk100M)
-        variable cnt: std_logic_vector(0 to 20);
     begin
         if clk100M'event and clk100M = '1' then
             clk50M <= not clk50M;
@@ -229,20 +254,4 @@ begin
             clk25M <= not clk25M;
         end if;
     end process;
-
-    process(clk100M)
-        constant cnt_lim: integer := 20 * 1000000;
-        variable cnt: integer range 0 to cnt_lim;
-    begin
-        if clk100M'event and clk100M = '1' then
-            cnt := cnt + 1;
-            if cnt <= 100 then
-                mouse_rst <= '1';
-            else
-                mouse_rst <= '1';
-            end if;
-        end if;
-    end process;
-
-
 end architecture;

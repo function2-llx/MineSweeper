@@ -66,7 +66,7 @@ architecture bhv of board is
 
     signal remain_sig: integer;
 
-    signal clk50M, clk25M: std_logic;
+    signal clk50M, clk25M, clk5M: std_logic;
 begin
     grid_ram_inst : grid_ram PORT MAP (
 		address	 => grid_addr,
@@ -85,7 +85,7 @@ begin
 
     remain <= remain_sig;
     
-    process(rst, clk25M)
+    process(rst, clk5M)
         variable addr: std_logic_vector(7 downto 0);
         variable mode: std_logic_vector(0 to 1);
         variable state: integer range 0 to 6;
@@ -109,13 +109,13 @@ begin
             elsif mode_in = "01" or mode_in = "10" then
                 mode := mode_in;
                 addr := get_addr(c, r);
-                if lose = '0' and win = '0' then
+                if lose = '0' and win = '0' and c <= 4 * n - 4 and r < n then
                     state := 0;
                 else
                     state := 6;
                 end if;
             end if;
-        elsif clk25M'event and clk25M = '1' then
+        elsif clk5M'event and clk5M = '1' then
             if mode = "00" then --  初始化
                 case state is
                 when 0 =>
@@ -144,9 +144,9 @@ begin
                     else
                         state := 0;
                     end if;
-                
+  
                 when 2 to 6 => null;
-                    
+
                 end case;
             elsif mode = "01" or mode = "10" then   --  游戏中
                 case state is
@@ -254,7 +254,6 @@ begin
     end process;
 
     process(clk100M)
-        variable cnt: std_logic_vector(0 to 20);
     begin
         if clk100M'event and clk100M = '1' then
             clk50M <= not clk50M;
@@ -265,6 +264,18 @@ begin
     begin
         if clk50M'event and clk50M = '1' then
             clk25M <= not clk25M;
+        end if;
+    end process;
+
+    process(clk25M)
+        variable cnt: integer range 0 to 5;
+    begin
+        if clk25M'event and clk25M = '1' then
+            cnt := cnt + 1;
+            if cnt = 5 then
+                clk5M <= not clk5M;
+                cnt := 0;
+            end if;
         end if;
     end process;
 
