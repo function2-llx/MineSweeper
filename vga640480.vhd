@@ -9,14 +9,18 @@ entity vga640480 is
 			reset       :       in  STD_LOGIC;
 			clk25       :		  out std_logic; --25MHz
 			q		      :		  in STD_LOGIC_vector(8 downto 0);--内存返回的数值
-			clicker     :       in std_logic;--新增测试按键
 			clk_0       :       in  STD_LOGIC; --100M时钟输入
 			hs,vs       :       out STD_LOGIC; --行同步、场同步信号
 			r,g,b       :       out STD_LOGIC_vector(2 downto 0);
 			addr        :       out std_logic_vector(7 downto 0);
 			data        :       in std_logic_vector(3 downto 0);
 			mouse_x     :       in std_logic_vector(9 downto 0);--鼠标x坐标
-			mouse_y     :       in std_logic_vector(8 downto 0) --鼠标y坐标
+			mouse_y     :       in std_logic_vector(8 downto 0);--鼠标y坐标
+			remain      :       in integer;  -- 剩余雷数
+			win         :       in std_logic;-- 胜利
+			lose        :       in std_logic;-- 失败
+			mouse_r     :       in integer;
+			mouse_c     :       in integer
 	  );
 end vga640480;
 
@@ -140,7 +144,7 @@ begin
 	 end process;
 	
  -----------------------------------------------------------------------	
-	process(reset,clk,vector_x,vector_y,clicker) -- XY坐标定位控制
+	process(reset,clk,vector_x,vector_y) -- XY坐标定位控制
 		variable x: integer;
 		variable y: integer;
 		variable cout: integer range 0 to 21; -- 17 is word area; 18 is 10x num area; 19 is 1x num area; 20 is illegal but in 640 * 480; 21 is out of range
@@ -148,22 +152,40 @@ begin
 		variable vectors_x: std_logic_vector(5 downto 0);
 		variable vectors_y: std_logic_vector(5 downto 0);
 		variable prefix: std_logic_vector(3 downto 0);
+		variable tens, ones: integer range 0 to 9;
 	begin
 		if reset='0' then
-			      r1 <= "000";
-					g1	<= "000";
-					b1	<= "000";	
+			r1 <= "000";
+			g1	<= "000";
+			b1	<= "000";	
 		elsif(clk'event and clk='1')then
-		  if clicker='0' then
-			if (vector_x(9 downto 6) = "0010" and vector_y(8 downto 6) = "010") or (vector_x(9 downto 6) = "0100" and vector_y(8 downto 6) = "010") then
-				address <= "0000" & vector_y(5 downto 0) & vector_x(5 downto 0);--64 * 64
-				r1 <= q(8 downto 6);
-				g1 <= q(5 downto 3);
-				b1 <= q(2 downto 0);
-			else 
-					r1 <= "000";
-					g1	<= "000";
-					b1	<= "000";
+		  if lose='1' then
+			if (x >= 300 and x < 340 and y >= 220 and y < 260) then
+				r1 <= "111";
+				g1	<= "111";
+				b1	<= "111";
+			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
+				r1 <= "110";
+				g1	<= "110";
+				b1	<= "110";
+			else
+				r1 <= "000";
+				g1	<= "000";
+				b1	<= "000";
+			end if;
+		  elsif win='1' then
+			if (x >= 300 and x < 340 and y >= 220 and y < 260) then
+				r1 <= "000";
+				g1	<= "000";
+				b1	<= "000";
+			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
+				r1 <= "110";
+				g1	<= "110";
+				b1	<= "110";
+			else
+				r1 <= "000";
+				g1	<= "000";
+				b1	<= "000";
 			end if;
 		  else
 			x := conv_integer(vector_x);
@@ -411,11 +433,15 @@ begin
 				vectors_y := conv_std_logic_vector(y - 16, 6);
 				vectors_x := conv_std_logic_vector(x - 502, 6);
 			elsif (x >= 566 and x < 598 and y >= 16 and y < 80) then
+				tens := remain / 10;
 				cout := 18;
-				-- to do
+				vectors_y := conv_std_logic_vector(y - 16, 6);
+				vectors_x := conv_std_logic_vector(x - 566, 6);
 			elsif (x >= 598 and x < 630 and y >= 16 and y < 80) then
+				ones := remain mod 10;
 				cout := 19;
-				-- to do
+				vectors_y := conv_std_logic_vector(y - 16, 6);
+				vectors_x := conv_std_logic_vector(x - 598, 6);
 			elsif (x < 640 and y < 480) then
 				cout := 20;
 			else -- 消隐区必须明确输出置0
@@ -436,15 +462,23 @@ begin
 				g1 <= q(5 downto 3);
 				b1 <= q(2 downto 0);
 			elsif cout = 18 then
-				-- to do
-				r1 <= "000";
-				g1	<= "011";
-				b1	<= "111";
+				prefix := conv_std_logic_vector(4 + tens, 4); -- 4 is 0100
+				address <= "1" & prefix & vectors_y(5 downto 0) & vectors_x(4 downto 0);--32 * 64
+				r1 <= q(8 downto 6);
+				g1 <= q(5 downto 3);
+				b1 <= q(2 downto 0);
+--				r1 <= "000";
+--				g1	<= "011";
+--				b1	<= "111";
 			elsif cout = 19 then
-				-- to do
-				r1 <= "011";
-				g1	<= "000";
-				b1	<= "111";
+				prefix := conv_std_logic_vector(4 + ones, 4); -- 4 is 0100
+				address <= "1" & prefix & vectors_y(5 downto 0) & vectors_x(4 downto 0);--32 * 64
+				r1 <= q(8 downto 6);
+				g1 <= q(5 downto 3);
+				b1 <= q(2 downto 0);
+--				r1 <= "011";
+--				g1	<= "000";
+--				b1	<= "111";
 			else
 				if data <= 6 then
 					prefix := data + 1;
@@ -456,11 +490,17 @@ begin
 					prefix := "0000";
 				end if;
 				address <= prefix & vectors_y(5 downto 0) & vectors_x(5 downto 0);--64 * 64
-				r1 <= q(8 downto 6);
-				g1 <= q(5 downto 3);
-				b1 <= q(2 downto 0);
+				if (mouse_r = rout and mouse_c = cout) then
+					r1 <= q(8 downto 6) + 2;
+					g1 <= q(5 downto 3) + 2;
+					b1 <= q(2 downto 0) + 2;
+				else
+					r1 <= q(8 downto 6);
+					g1 <= q(5 downto 3);
+					b1 <= q(2 downto 0);
+				end if;
 			end if;
-			if (vector_x = mouse_x and vector_y + 4 >= mouse_y and vector_y <= mouse_y + 4) or (vector_y = mouse_y and vector_x + 4 >= mouse_x and vector_x <= mouse_x + 4) then
+			if (vector_x + 2 >= mouse_x and vector_x <= mouse_x + 2 and vector_y + 4 >= mouse_y and vector_y <= mouse_y + 4) or (vector_y  + 2 <= mouse_y and vector_y >= mouse_y + 2 and vector_x + 4 >= mouse_x and vector_x <= mouse_x + 4) then
 				r1 <= "000";
 				g1 <= "111";
 				b1 <= "000";
