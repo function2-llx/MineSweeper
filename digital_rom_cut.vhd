@@ -89,7 +89,7 @@ BEGIN
 		intended_device_family => "Cyclone II",
 		lpm_hint => "ENABLE_RUNTIME_MOD=NO",
 		lpm_type => "altsyncram",
-		numwords_a => 65536,--4096 = 2 ^ 12 = 64 * 64
+		numwords_a => 63488,--4096 = 2 ^ 12 = 64 * 64
 		operation_mode => "ROM",
 		outdata_aclr_a => "NONE",
 		outdata_reg_a => "UNREGISTERED",

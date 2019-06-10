@@ -154,42 +154,13 @@ begin
 		variable vectors_x: std_logic_vector(5 downto 0);
 		variable vectors_y: std_logic_vector(5 downto 0);
 		variable prefix: std_logic_vector(3 downto 0);
-		variable tens, ones: integer range 0 to 9;
+		variable tens, ones: integer range 0 to 10;
 	begin
 		if reset='0' then
 			r1 <= "000";
 			g1	<= "000";
 			b1	<= "000";	
 		elsif(clk'event and clk='1')then
---		  if lose='1' then
---		  if (x < 300 or x >= 340 or y < 220 or y >= 260) then
---				r1 <= "000";
---				g1	<= "000";
---				b1	<= "000";
-----			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
-----				r1 <= "110";
-----				g1	<= "110";
-----				b1	<= "110";
---			else
---				r1 <= "111";
---				g1	<= "000";
---				b1	<= "111";
---			end if;
---		  elsif win='1' then
---			if (x < 300 or x >= 340 or y < 220 or y >= 260) then
---				r1 <= "000";
---				g1	<= "000";
---				b1	<= "000";
-----			elsif (x >= 0 and x < 640 and y >= 0 and y < 480) then
-----				r1 <= "110";
-----				g1	<= "110";
-----				b1	<= "110";
---			else
---				r1 <= "000";
---				g1	<= "111";
---				b1	<= "000";
---			end if;
---		  else
 			x := conv_integer(vector_x);
 			y := conv_integer(vector_y);
 			--y += 16
@@ -430,17 +401,25 @@ begin
 				vectors_y := conv_std_logic_vector((y + 72) mod 96, 6);
 				vectors_x := conv_std_logic_vector((x + 40) mod 56, 6);
 				--line 16: y [8 + 96 * 2, 8 + 64 * 7 - 96 * 2), x [16 + 1 * 56, 16 + 2 * 56) || [16 + 9 * 56, 16 + 10 * 56)
-			elsif (x >= 502 and x < 566 and y >= 16 and y < 80) then
+			elsif (x > 502 and x < 566 and y >= 16 and y < 80) then
 				cout := 17;
 				vectors_y := conv_std_logic_vector(y - 16, 6);
 				vectors_x := conv_std_logic_vector(x - 502, 6);
 			elsif (x >= 566 and x < 598 and y >= 16 and y < 80) then
-				tens := remain / 10;
+				if remain < 0 then
+					tens := 10;
+				else
+					tens := remain / 10;
+				end if;
 				cout := 18;
 				vectors_y := conv_std_logic_vector(y - 16, 6);
 				vectors_x := conv_std_logic_vector(x - 566, 6);
 			elsif (x >= 598 and x < 630 and y >= 16 and y < 80) then
-				ones := remain mod 10;
+				if remain < 0 then
+					ones := 0;
+				else
+					ones := remain mod 10;
+				end if;
 				cout := 19;
 				vectors_y := conv_std_logic_vector(y - 16, 6);
 				vectors_x := conv_std_logic_vector(x - 598, 6);
