@@ -47,7 +47,7 @@ architecture bhv of board is
     signal board_rdaddr, board_wraddr: std_logic_vector(7 downto 0);
     signal board_wren: std_logic := '0';
 
-    function get_addr(c: integer; r: integer) return std_logic_vector is
+    function get_addr(c: integer; r: integer) return std_logic_vector is    --  格点转编号函数
     begin
         if c <= n - 1 then
             return conv_std_logic_vector(c * (c + 1) / 2 + r, 8);
@@ -68,12 +68,14 @@ architecture bhv of board is
 
     signal clk50M, clk25M, clk5M: std_logic;
 begin
+    -- 存储网格初始化信息，只读
     grid_ram_inst : grid_ram PORT MAP (
 		address	 => grid_addr,
 		clock	 => clk100M,
 		q	 => grid_data
     );
     
+    -- 辅助游戏逻辑控制的RAM，存储网格动态信息（是否翻开，插旗等）
     board_ram_inst : board_ram PORT MAP (
 		clock	 => clk100M,
 		data	 => board_in,
@@ -97,6 +99,7 @@ begin
         constant unknown_state: std_logic_vector(3 downto 0) := "1001";
 
     begin
+        -- 接受命令，进入相应状态机
         if rst = '1' then
             if mode_in = "00"then
                 state := 0;
@@ -165,7 +168,7 @@ begin
                         if info = "00" then
                             if grid_data(3) = '1' then
                                 lose <= '1';
-                                vga_in <= dead_state;   -- 翻开了雷
+                                vga_in <= dead_state;   -- 翻开了雷，失败
                             else
                                 vga_in(3) <= '0';
                                 vga_in(2 downto 0) <= grid_data(2 downto 0);
@@ -213,6 +216,7 @@ begin
                 when 2 =>
                     vga_wren <= '0';
                     board_wren <= '0';
+                    --  胜利条件
                     if lose = '0' and remain_sig = 0 and oper = 0 then
                         win <= '1';
                     end if;
